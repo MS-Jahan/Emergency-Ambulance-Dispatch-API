@@ -4,7 +4,12 @@ import helmet from 'helmet'
 import { env } from './config/env'
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler'
 import { globalLimiter } from './middleware/rateLimiter'
+import { adminRouter } from './modules/admin/admin.routes'
+import { ambulancesRouter } from './modules/ambulances/ambulance.routes'
 import { authRouter } from './modules/auth/auth.routes'
+import { driverRouter } from './modules/drivers/driver.routes'
+import { hospitalsRouter } from './modules/hospitals/hospital.routes'
+import { requestsRouter } from './modules/requests/request.routes'
 import { usersRouter } from './modules/users/users.routes'
 import { healthRouter } from './routes/health.routes'
 
@@ -31,6 +36,11 @@ export function createApp(): Express {
   app.use('/api/v1/health', healthRouter)
   app.use('/api/v1/auth', authRouter)
   app.use('/api/v1/users', usersRouter)
+  app.use('/api/v1/hospitals', hospitalsRouter)
+  app.use('/api/v1/ambulances', ambulancesRouter)
+  app.use('/api/v1/requests', requestsRouter)
+  app.use('/api/v1/driver', driverRouter)
+  app.use('/api/v1/admin', adminRouter)
 
   app.use(notFoundHandler)
   app.use(globalErrorHandler)
