@@ -145,6 +145,21 @@ tests/                   vitest integration suites
 
 ## Deployment
 
-The production build bundles `src/server.ts` into a single file with tsup and deploys to Vercel as one serverless function, configured through `vercel.json` rewrites. `DATABASE_URL` should point at the Neon pooled connection string and `DIRECT_URL` at the direct one, so serverless cold starts reuse pooled connections instead of exhausting Postgres. Apply migrations with `bunx prisma migrate deploy` against the direct url.
+The production build bundles `src/server.ts` into a single file with tsup and deploys to Vercel as one serverless function. Postgres lives on Neon, using the pooled connection string for the app and the direct one for migrations.
 
-Set all environment variables from `.env.example` in the Vercel project settings, and register the deployed webhook url in the Stripe dashboard for `checkout.session.completed`.
+The full walkthrough is in [docs/deployment.md](docs/deployment.md), covering Neon and Stripe setup, every environment variable, migrations and seeding, registering the Stripe webhook, and troubleshooting.
+
+Short version:
+
+```bash
+vercel login
+vercel link
+vercel env add DATABASE_URL      # neon pooled string
+vercel env add DIRECT_URL        # neon direct string
+# ... plus the rest of the variables from .env.example
+vercel --prod
+DATABASE_URL=<pooled> DIRECT_URL=<direct> bunx prisma migrate deploy
+bun run db:seed                  # with DATABASE_URL pointing at neon
+```
+
+Then register `https://<your-app>.vercel.app/api/v1/payments/webhook` in the Stripe dashboard for the `checkout.session.completed` event and put its signing secret into `STRIPE_WEBHOOK_SECRET` on Vercel.
