@@ -135,23 +135,25 @@ export async function handleSuccessCallback(sessionId: string) {
   if (!payment) {
     throw AppError.notFound('No payment found for this checkout session')
   }
+  // Webhook already did the real state change, nothing to verify
+  if (payment.status === 'PAID') {
+    return payment
+  }
 
-  // Trust the webhook for the real state change, this is a live double check
+  // Still pending, double check with stripe before showing success
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
-    if (session.payment_status === 'paid' && payment.status === 'PENDING') {
-      const confirmed = await prisma.payment.update({
+    if (session.payment_status === 'paid') {
+      return prisma.payment.update({
         where: { id: payment.id },
         data: { status: 'PAID' },
         select: PAYMENT_SELECT,
       })
-      return confirmed
     }
+    return payment
   } catch {
     throw new AppError(502, 'Could not verify the payment with stripe right now')
   }
-
-  return payment
 }
 
 export async function handleCancelCallback(sessionId: string) {
