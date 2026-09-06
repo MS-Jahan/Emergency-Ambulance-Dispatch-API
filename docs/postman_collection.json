@@ -1,0 +1,766 @@
+{
+  "info": {
+    "name": "Emergency Ambulance Dispatch API",
+    "description": "REST API for requesting ambulances, dispatching them to patients, tracking the trip, and collecting payment. Three roles: PATIENT, DRIVER, ADMIN. All responses use the envelope { success, message, data } on success and { success, message, errors } on failure. Set the baseUrl variable to your deployment, then log in with the demo admin or your own account. Login and register responses fill the {{token}} collection variable automatically if you use the test scripts included.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "requestId", "value": "" },
+    { "key": "ambulanceId", "value": "" },
+    { "key": "hospitalId", "value": "" },
+    { "key": "driverUserId", "value": "" },
+    { "key": "paymentId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Patient\",\n  \"email\": \"patient@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"+8801711223344\"\n}"
+            },
+            "description": "Creates a patient account and returns access and refresh tokens. Self registration is always the PATIENT role."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.success) pm.collectionVariables.set('token', body.data.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@dispatch.demo\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "description": "Logs in with email and password. Demo admin credentials are admin@dispatch.demo / Admin123!. Swap in patient or driver credentials to test those roles."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.success) pm.collectionVariables.set('token', body.data.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Google login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "google"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"<google id token from the client>\"\n}"
+            },
+            "description": "Verifies a Google ID token with the configured OAuth client, then finds or creates the user and issues our own tokens."
+          }
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<refresh token from login>\"\n}"
+            },
+            "description": "Exchanges a valid refresh token for a new pair. The old refresh token is revoked on use, so reuse returns 401."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<refresh token to revoke>\"\n}"
+            },
+            "description": "Revokes one refresh token."
+          }
+        },
+        {
+          "name": "My profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Returns the logged in user. Requires a bearer token."
+          }
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Name\",\n  \"phone\": \"+8801999999999\"\n}"
+            },
+            "description": "Updates your own name and phone."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hospitals",
+      "item": [
+        {
+          "name": "List hospitals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hospitals?page=1&limit=10&q=square",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hospitals"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "q", "value": "square", "description": "Searches name and address" },
+                { "key": "sortBy", "value": "createdAt", "description": "name or createdAt" },
+                { "key": "sortOrder", "value": "desc", "description": "asc or desc" }
+              ]
+            },
+            "description": "Paginated hospital list with search. Available to any logged in user."
+          }
+        },
+        {
+          "name": "Get hospital",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hospitals/{{hospitalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hospitals", "{{hospitalId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create hospital",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hospitals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hospitals"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Square Hospital\",\n  \"address\": \"18/F Bir Uttam Qazi Nuruzzaman Sarak, Dhaka\",\n  \"lat\": 23.7507,\n  \"lng\": 90.3898,\n  \"phone\": \"+88028144666\"\n}"
+            },
+            "description": "Admin only."
+          }
+        },
+        {
+          "name": "Update hospital",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hospitals/{{hospitalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hospitals", "{{hospitalId}}"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+88028144667\"\n}" },
+            "description": "Admin only."
+          }
+        },
+        {
+          "name": "Delete hospital",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hospitals/{{hospitalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hospitals", "{{hospitalId}}"]
+            },
+            "description": "Admin only. Soft delete, the row stays in the database."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ambulances",
+      "item": [
+        {
+          "name": "List ambulances",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ambulances?status=AVAILABLE&type=ICU&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ambulances"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "AVAILABLE",
+                  "description": "AVAILABLE, ON_TRIP, or MAINTENANCE"
+                },
+                { "key": "type", "value": "ICU", "description": "BASIC, ICU, or CARDIAC" },
+                { "key": "q", "value": "DHK", "description": "Searches plate number" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Nearby ambulances",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ambulances/nearby?lat=23.75&lng=90.39&radiusKm=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ambulances", "nearby"],
+              "query": [
+                { "key": "lat", "value": "23.75" },
+                { "key": "lng", "value": "90.39" },
+                { "key": "radiusKm", "value": "10", "description": "0.5 to 50" },
+                { "key": "type", "value": "ICU", "description": "Optional ambulance type filter" }
+              ]
+            },
+            "description": "Available ambulances near a point, ordered by distance from their home hospital, with distanceKm on each item."
+          }
+        },
+        {
+          "name": "Create ambulance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ambulances",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ambulances"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plateNumber\": \"DHK-5005\",\n  \"type\": \"ICU\",\n  \"homeHospitalId\": \"{{hospitalId}}\"\n}"
+            },
+            "description": "Admin only."
+          }
+        },
+        {
+          "name": "Get ambulance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ambulances/{{ambulanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ambulances", "{{ambulanceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update ambulance",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ambulances/{{ambulanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ambulances", "{{ambulanceId}}"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"MAINTENANCE\"\n}" },
+            "description": "Admin only."
+          }
+        },
+        {
+          "name": "Delete ambulance",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ambulances/{{ambulanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ambulances", "{{ambulanceId}}"]
+            },
+            "description": "Admin only. Soft delete."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Emergency requests",
+      "item": [
+        {
+          "name": "Create request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickupAddress\": \"House 42, Road 11, Banani\",\n  \"pickupLat\": 23.7936,\n  \"pickupLng\": 90.4043,\n  \"priority\": \"HIGH\",\n  \"destinationHospitalId\": \"{{hospitalId}}\"\n}"
+            },
+            "description": "Patient only. Starts a PENDING request and writes the first audit log entry.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "const body = pm.response.json();",
+                    "if (body.success) pm.collectionVariables.set('requestId', body.data.request.id);"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "List requests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests?status=PENDING&priority=HIGH&q=banani&sortBy=requestedAt&sortOrder=desc&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "Any of PENDING, ASSIGNED, EN_ROUTE_PICKUP, PICKED_UP, EN_ROUTE_HOSPITAL, COMPLETED, CANCELLED"
+                },
+                { "key": "priority", "value": "HIGH", "description": "CRITICAL, HIGH, or NORMAL" },
+                { "key": "q", "value": "banani", "description": "Searches pickup address" },
+                {
+                  "key": "sortBy",
+                  "value": "requestedAt",
+                  "description": "requestedAt, priority, or status"
+                },
+                { "key": "sortOrder", "value": "desc" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "Admin sees everything, a driver sees trips assigned to them, a patient sees their own requests."
+          }
+        },
+        {
+          "name": "My assigned trips",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests/my-assigned?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests", "my-assigned"]
+            },
+            "description": "Driver only, paginated list of trips assigned to the logged in driver."
+          }
+        },
+        {
+          "name": "Get request with audit trail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests/{{requestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests", "{{requestId}}"]
+            },
+            "description": "Full detail including statusLogs. Only the patient, the assigned driver, or an admin can view."
+          }
+        },
+        {
+          "name": "Assign ambulance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests/{{requestId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests", "{{requestId}}", "assign"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ambulanceId\": \"{{ambulanceId}}\",\n  \"driverId\": \"{{driverUserId}}\"\n}"
+            },
+            "description": "Admin only. Runs in a transaction with conditional updates, so two admins cannot assign the same ambulance. Omit driverId to auto pick the longest idle available driver. Returns 409 if the ambulance or driver was taken."
+          }
+        },
+        {
+          "name": "Update trip status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests/{{requestId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests", "{{requestId}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EN_ROUTE_PICKUP\",\n  \"note\": \"Left the hospital\"\n}"
+            },
+            "description": "Assigned driver or admin only. Legal forward transitions are ASSIGNED to EN_ROUTE_PICKUP, EN_ROUTE_PICKUP to PICKED_UP, PICKED_UP to EN_ROUTE_HOSPITAL, EN_ROUTE_HOSPITAL to COMPLETED. Anything else returns 409. COMPLETED frees the ambulance and driver."
+          }
+        },
+        {
+          "name": "Cancel request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/requests/{{requestId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "requests", "{{requestId}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancelReason\": \"Patient reached the hospital by private car\"\n}"
+            },
+            "description": "Patient who owns the request or an admin. Allowed while PENDING, ASSIGNED, or EN_ROUTE_PICKUP."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver",
+      "item": [
+        {
+          "name": "My driver profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/driver/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "driver", "me"]
+            },
+            "description": "Driver only."
+          }
+        },
+        {
+          "name": "Update my status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/driver/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "driver", "status"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"AVAILABLE\"\n}" },
+            "description": "Driver only. AVAILABLE, ON_TRIP, or OFFLINE. Going offline while on a trip returns 409."
+          }
+        },
+        {
+          "name": "Update my location",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/driver/location",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "driver", "location"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"lat\": 23.79,\n  \"lng\": 90.40\n}" },
+            "description": "Driver only, stores the driver's current position."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Initiate checkout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/initiate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "initiate"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"requestId\": \"{{requestId}}\"\n}" },
+            "description": "Patient only, for a COMPLETED trip. Creates a Stripe checkout session and returns its URL. Prices are flat by ambulance type: BASIC 15, ICU 35, CARDIAC 60 in the checkout currency.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "const body = pm.response.json();",
+                    "if (body.success && body.data.payment) pm.collectionVariables.set('paymentId', body.data.payment.id);"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Stripe webhook",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "stripe-signature", "value": "<signed by stripe>" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "webhook"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": { \"object\": { \"id\": \"cs_test_x\" } }\n}"
+            },
+            "description": "Called by stripe, not by you. Verifies the signature over the raw body and marks the payment PAID on checkout.session.completed."
+          }
+        },
+        {
+          "name": "My payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/my?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "my"]
+            },
+            "description": "Patient only, their own payment history."
+          }
+        },
+        {
+          "name": "Get payment",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/{{paymentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "{{paymentId}}"]
+            },
+            "description": "Owner or admin."
+          }
+        },
+        {
+          "name": "Checkout success callback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/callback/success?sessionId=cs_test_x",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "callback", "success"],
+              "query": [{ "key": "sessionId", "value": "cs_test_x" }]
+            },
+            "description": "Stripe redirects the payer's browser here after checkout. Reports the payment status."
+          }
+        },
+        {
+          "name": "Checkout cancel callback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/callback/cancel?sessionId=cs_test_x",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "callback", "cancel"],
+              "query": [{ "key": "sessionId", "value": "cs_test_x" }]
+            },
+            "description": "Stripe redirects here if the payer cancels. Expires the session so a stale link cannot be paid later."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Rate a completed trip",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feedback"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"{{requestId}}\",\n  \"rating\": 5,\n  \"comment\": \"Fast and professional\"\n}"
+            },
+            "description": "Patient only, once per completed trip."
+          }
+        },
+        {
+          "name": "Feedback for a request",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedback/request/{{requestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feedback", "request", "{{requestId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Create driver account",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/drivers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "drivers"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Karim Driver\",\n  \"email\": \"karim@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"+8801833445566\",\n  \"licenseNumber\": \"DL-771234\"\n}"
+            },
+            "description": "Admin only. Creates the user with the DRIVER role and a driver profile in one transaction."
+          }
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users?role=DRIVER&q=karim&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"],
+              "query": [
+                { "key": "role", "value": "DRIVER", "description": "PATIENT, DRIVER, or ADMIN" },
+                { "key": "q", "value": "karim", "description": "Searches name and email" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update user role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/:id/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", ":id", "role"],
+              "variable": [{ "key": "id", "value": "<user id>" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"DRIVER\"\n}" },
+            "description": "Admin only. Moving a user into DRIVER creates a driver profile if they do not have one."
+          }
+        },
+        {
+          "name": "Dashboard stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/dashboard-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "dashboard-stats"]
+            },
+            "description": "Counts of users, ambulances, requests by status, and total paid revenue."
+          }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/audit-logs?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "audit-logs"],
+              "query": [
+                { "key": "requestId", "value": "", "description": "Optional filter by request" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Every request status change with actor, from and to status, and note."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Pings the database. No auth needed."
+          }
+        }
+      ]
+    }
+  ]
+}
