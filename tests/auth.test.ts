@@ -161,4 +161,14 @@ describe('rbac: role enforcement', () => {
   it('rejects garbage bearer tokens with 401', async () => {
     await request(app).get('/api/v1/users/me').set('Authorization', 'Bearer not.a.jwt').expect(401)
   })
+
+  it('rejects a google login with a fake id token and never creates an account', async () => {
+    await request(app)
+      .post('/api/v1/auth/google')
+      .send({ idToken: 'fake.google.id.token.value.abcdefghijklmnop' })
+      .expect(401)
+
+    const users = await prisma.user.findMany({ where: { role: 'PATIENT' } })
+    expect(users).toHaveLength(0)
+  })
 })
