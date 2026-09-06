@@ -293,4 +293,31 @@ describe('feedback', () => {
       .expect(200)
     expect(res.body.data.items).toHaveLength(1)
   })
+
+  it('lets the assigned driver and an admin read feedback but rejects an unrelated patient', async () => {
+    const { patient, driver, trip } = await setupCompletedTrip()
+    const admin = await createUser('ADMIN')
+    const stranger = await createUser('PATIENT')
+
+    await request(app)
+      .post('/api/v1/feedback')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({ requestId: trip.id, rating: 4 })
+      .expect(201)
+
+    await request(app)
+      .get(`/api/v1/feedback/request/${trip.id}`)
+      .set('Authorization', `Bearer ${driver.token}`)
+      .expect(200)
+
+    await request(app)
+      .get(`/api/v1/feedback/request/${trip.id}`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .expect(200)
+
+    await request(app)
+      .get(`/api/v1/feedback/request/${trip.id}`)
+      .set('Authorization', `Bearer ${stranger.token}`)
+      .expect(403)
+  })
 })

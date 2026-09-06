@@ -12,6 +12,7 @@ export const create = catchAsync(async (req: Request, res: Response) => {
 })
 
 export const listForRequest = catchAsync(async (req: Request, res: Response) => {
-  const items = await listFeedbackForRequest(req.params.requestId as string)
+  if (!req.user) throw AppError.unauthorized()
+  const items = await listFeedbackForRequest(req.params.requestId as string, req.user)
   sendResponse(res, { message: 'Feedback fetched', data: { items } })
 })

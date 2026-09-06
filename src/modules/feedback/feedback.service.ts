@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
+import type { AuthUser } from '../../middleware/auth'
 import { AppError } from '../../shared/AppError'
 import { buildMeta } from '../../shared/paginate'
 import type { CreateFeedbackInput } from './feedback.validation'
@@ -52,7 +53,22 @@ export async function createFeedback(patientId: string, input: CreateFeedbackInp
   })
 }
 
-export async function listFeedbackForRequest(requestId: string) {
+export async function listFeedbackForRequest(requestId: string, requester: AuthUser) {
+  const request = await prisma.emergencyRequest.findFirst({
+    where: { id: requestId },
+    select: { patientId: true, driverId: true },
+  })
+  if (!request) {
+    throw AppError.notFound('Emergency request not found')
+  }
+
+  const isOwner = request.patientId === requester.id
+  const isAssignedDriver = request.driverId === requester.id
+  const isAdmin = requester.role === 'ADMIN'
+  if (!isOwner && !isAssignedDriver && !isAdmin) {
+    throw AppError.forbidden('You can only view feedback for your own trips')
+  }
+
   return prisma.feedback.findMany({
     where: { requestId },
     select: FEEDBACK_SELECT,
