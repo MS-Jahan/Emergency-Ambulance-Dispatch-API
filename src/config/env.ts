@@ -18,6 +18,9 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
   STRIPE_CURRENCY: z.string().default('usd'),
+
+  // Public base url of this api, used to build stripe checkout callback urls
+  APP_BASE_URL: z.string().url().default('http://localhost:5000'),
 })
 
 const parsed = envSchema.safeParse(process.env)
