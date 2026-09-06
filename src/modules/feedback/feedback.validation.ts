@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { paginationQuerySchema } from '../../shared/paginate'
 
 export const createFeedbackSchema = z.object({
   requestId: z.string().cuid(),
