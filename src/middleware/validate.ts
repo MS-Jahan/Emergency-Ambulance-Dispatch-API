@@ -8,6 +8,15 @@ interface ValidateSchemas {
   params?: ZodType
 }
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      validatedQuery?: Record<string, unknown>
+    }
+  }
+}
+
 export const validate =
   (schemas: ValidateSchemas): RequestHandler =>
   (req, _res, next) => {
@@ -15,11 +24,13 @@ export const validate =
       if (schemas.body) {
         req.body = schemas.body.parse(req.body) as typeof req.body
       }
-      if (schemas.params) {
-        req.params = schemas.params.parse(req.params) as typeof req.params
-      }
+      // express 5 exposes params and query as getter only properties that rebuild on
+      // every access, so parsed query values go on a plain custom property instead
       if (schemas.query) {
-        req.query = schemas.query.parse(req.query) as typeof req.query
+        req.validatedQuery = schemas.query.parse(req.query) as Record<string, unknown>
+      }
+      if (schemas.params) {
+        Object.assign(req.params, schemas.params.parse(req.params))
       }
       next()
     } catch (error) {
