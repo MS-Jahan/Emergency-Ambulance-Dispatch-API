@@ -1,6 +1,7 @@
 import { PrismaClient, Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { config } from 'dotenv'
+import { logger } from '../src/lib/logger'
 
 config()
 
@@ -69,12 +70,12 @@ async function main() {
     }
   }
 
-  console.log(`Seed done. Admin: ${admin.email}`)
+  logger.info(`Seed done. Admin: ${admin.email}`)
 }
 
 main()
   .catch((e) => {
-    console.error(e)
+    logger.error(e)
     process.exitCode = 1
   })
   .finally(() => prisma.$disconnect())
