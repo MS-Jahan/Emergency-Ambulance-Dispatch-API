@@ -39,7 +39,7 @@ The seed also creates three hospitals and three ambulances. Create patient and d
 
 ## API documentation
 
-A complete Postman collection covering all 30 endpoints is in `docs/postman_collection.json`. Import it into Postman, set the `baseUrl` variable, and log in, the login request stores the token in the collection variable automatically.
+A complete Postman collection covering all 42 endpoints is in `docs/postman_collection.json`. Import it into Postman, set the `baseUrl` variable, and log in, the login request stores the token in the collection variable automatically.
 
 ## Getting started
 
@@ -104,7 +104,7 @@ The integration suite runs against a real Postgres database in `dispatch_test`:
 sudo docker exec dispatch-db psql -U dispatch -d dispatch -c "CREATE DATABASE dispatch_test;"
 set -a; source .env.test; set +a; bunx prisma migrate deploy
 
-# run the 61 tests
+# run the tests
 bunx vitest run
 ```
 
