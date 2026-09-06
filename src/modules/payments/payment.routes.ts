@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import express, { Router } from 'express'
 import { authenticate, requireRole } from '../../middleware/auth'
 import { validate } from '../../middleware/validate'
 import {
@@ -38,4 +38,4 @@ paymentCallbackRouter.get('/cancel', cancelCallback)
 // parser in app.ts
 export const paymentWebhookRouter = Router()
 
-paymentWebhookRouter.post('/', webhook)
+paymentWebhookRouter.post('/', express.raw({ type: 'application/json' }), webhook)
