@@ -41,6 +41,11 @@ The seed also creates three hospitals and three ambulances. Create patient and d
 
 **Live API:** https://emergency-ambulance-dispatch-api.vercel.app
 
+| Docs | URL |
+|---|---|
+| Swagger UI | https://emergency-ambulance-dispatch-api.vercel.app/api/v1/docs |
+| OpenAPI spec | https://emergency-ambulance-dispatch-api.vercel.app/api/v1/openapi.yaml |
+
 All 42 endpoints are documented in two formats:
 
 | Format | File | Use |
@@ -52,10 +57,18 @@ All 42 endpoints are documented in two formats:
 
 1. Postman → **Import** → upload `docs/postman_collection.json`
 2. `baseUrl` defaults to the live deployment; switch to `http://localhost:5000` for local dev
-3. Run **Auth → Login** (demo admin above) — the test script saves `{{token}}` automatically
+3. Run **Auth → Login** (demo admin above). The test script saves `{{token}}` automatically
 4. Folders map to roles: Auth, Hospitals, Ambulances, Emergency requests, Driver, Payments, Feedback, Admin, Health
 
-To get a public documentation link for submission (`documenter.getpostman.com/...`): import the collection, open **View complete documentation**, click **Publish docs**, and copy the URL.
+**Publish a public docs link** (for the submission form):
+
+1. Sign in at [postman.com](https://www.postman.com/)
+2. **Import** → drag in `docs/postman_collection.json`
+3. Open the collection → **View complete documentation** (top right of the collection overview)
+4. Click **Publish docs** → **Publish**
+5. Copy the `documenter.getpostman.com/view/...` URL. That is your **API Docs** link for submission
+
+No code deploy needed for Postman. Re-import the JSON file after you change endpoints, then publish again to refresh the public page.
 
 ### OpenAPI
 

@@ -5,7 +5,11 @@
       "src": "dist/server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["node_modules/.prisma/client/**", "node_modules/@prisma/client/**"]
+        "includeFiles": [
+          "node_modules/.prisma/client/**",
+          "node_modules/@prisma/client/**",
+          "docs/openapi.yaml"
+        ]
       }
     }
   ],

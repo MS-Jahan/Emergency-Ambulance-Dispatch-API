@@ -17,13 +17,27 @@ import {
 } from './modules/payments/payment.routes'
 import { requestsRouter } from './modules/requests/request.routes'
 import { usersRouter } from './modules/users/users.routes'
+import { docsRouter } from './routes/docs.routes'
 import { healthRouter } from './routes/health.routes'
 
 export function createApp(): Express {
   const app = express()
 
   app.disable('x-powered-by')
-  app.use(helmet())
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", 'https://unpkg.com', 'data:'],
+        },
+      },
+    }),
+  )
   app.use(
     cors({
       origin: env.CORS_ORIGIN.split(',').map((o) => o.trim()),
@@ -42,6 +56,7 @@ export function createApp(): Express {
   })
 
   app.use('/api/v1/health', healthRouter)
+  app.use('/api/v1', docsRouter)
   app.use('/api/v1/auth', authRouter)
   app.use('/api/v1/users', usersRouter)
   app.use('/api/v1/hospitals', hospitalsRouter)
