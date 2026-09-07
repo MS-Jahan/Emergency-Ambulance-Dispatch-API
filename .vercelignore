@@ -1,6 +1,10 @@
 node_modules/
-dist/
+.git/
+.gitignore
 coverage/
+tests/
+docs/
+dist/*.map
 
 .env
 .env.*
@@ -9,5 +13,4 @@ coverage/
 
 *.log
 .DS_Store
-.vercel
-.env*
+.vercel/
