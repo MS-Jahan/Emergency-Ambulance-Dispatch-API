@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "docs:openapi": "p2o docs/postman_collection.json -f docs/openapi.yaml && node scripts/patch-openapi-servers.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -39,6 +40,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/supertest": "^7.2.1",
     "pino-pretty": "^13.1.3",
+    "postman-to-openapi": "^3.0.1",
     "prisma": "^6.16.0",
     "supertest": "^7.2.2",
     "tsup": "^8.5.1",

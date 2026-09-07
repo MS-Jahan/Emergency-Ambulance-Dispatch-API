@@ -1,0 +1,1092 @@
+openapi: 3.0.0
+info:
+  title: Emergency Ambulance Dispatch API
+  description: >-
+    REST API for requesting ambulances, dispatching them to patients, tracking
+    the trip, and collecting payment. Three roles: PATIENT, DRIVER, ADMIN. All
+    responses use the envelope { success, message, data } on success and {
+    success, message, errors } on failure. Set the baseUrl variable to your
+    deployment, then log in with the demo admin or your own account. Login and
+    register responses fill the {{token}} collection variable automatically if
+    you use the test scripts included.
+  version: 1.0.0
+servers:
+  - url: https://emergency-ambulance-dispatch-api.vercel.app
+    description: Production
+  - url: http://localhost:5000
+    description: Local development
+
+components:
+  securitySchemes:
+    noauthAuth:
+      type: http
+      scheme: noauth
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Hospitals
+  - name: Ambulances
+  - name: Emergency requests
+  - name: Driver
+  - name: Payments
+  - name: Feedback
+  - name: Admin
+  - name: Health
+paths:
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register
+      description: >-
+        Creates a patient account and returns access and refresh tokens. Self
+        registration is always the PATIENT role.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"name\": \"Demo Patient\",\n  \"email\":
+                \"patient@example.com\",\n  \"password\": \"Password123\",\n 
+                \"phone\": \"+8801711223344\"\n}"
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: >-
+        Logs in with email and password. Demo admin credentials are
+        admin@dispatch.demo / Admin123!. Swap in patient or driver credentials
+        to test those roles.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"email\": \"admin@dispatch.demo\",\n  \"password\":
+                \"Admin123!\"\n}"
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/google:
+    post:
+      tags:
+        - Auth
+      summary: Google login
+      description: >-
+        Verifies a Google ID token with the configured OAuth client, then finds
+        or creates the user and issues our own tokens.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"idToken\": \"<google id token from the client>\"\n}"'
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/refresh-token:
+    post:
+      tags:
+        - Auth
+      summary: Refresh token
+      description: >-
+        Exchanges a valid refresh token for a new pair. The old refresh token is
+        revoked on use, so reuse returns 401.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"refreshToken\": \"<refresh token from login>\"\n}"'
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      description: Revokes one refresh token.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"refreshToken\": \"<refresh token to revoke>\"\n}"'
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/users/me:
+    get:
+      tags:
+        - Auth
+      summary: My profile
+      description: Returns the logged in user. Requires a bearer token.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    patch:
+      tags:
+        - Auth
+      summary: Update my profile
+      description: Updates your own name and phone.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"name\": \"New Name\",\n  \"phone\":
+                \"+8801999999999\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/hospitals:
+    get:
+      tags:
+        - Hospitals
+      summary: List hospitals
+      description: Paginated hospital list with search. Available to any logged in user.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '10'
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Searches name and address
+          example: square
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+          description: name or createdAt
+          example: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+          description: asc or desc
+          example: desc
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - Hospitals
+      summary: Create hospital
+      description: Admin only.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"name\": \"Square Hospital\",\n  \"address\": \"18/F Bir
+                Uttam Qazi Nuruzzaman Sarak, Dhaka\",\n  \"lat\": 23.7507,\n 
+                \"lng\": 90.3898,\n  \"phone\": \"+88028144666\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/hospitals/{hospitalId}:
+    get:
+      tags:
+        - Hospitals
+      summary: Get hospital
+      parameters:
+        - name: hospitalId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    patch:
+      tags:
+        - Hospitals
+      summary: Update hospital
+      description: Admin only.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"phone\": \"+88028144667\"\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: hospitalId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Hospitals
+      summary: Delete hospital
+      description: Admin only. Soft delete, the row stays in the database.
+      parameters:
+        - name: hospitalId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/ambulances:
+    get:
+      tags:
+        - Ambulances
+      summary: List ambulances
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: AVAILABLE, ON_TRIP, or MAINTENANCE
+          example: AVAILABLE
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: BASIC, ICU, or CARDIAC
+          example: ICU
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Searches plate number
+          example: DHK
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '10'
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+          example: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+          example: desc
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - Ambulances
+      summary: Create ambulance
+      description: Admin only.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"plateNumber\": \"DHK-5005\",\n  \"type\": \"ICU\",\n 
+                \"homeHospitalId\": \"{{hospitalId}}\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/ambulances/nearby:
+    get:
+      tags:
+        - Ambulances
+      summary: Nearby ambulances
+      description: >-
+        Available ambulances near a point, ordered by distance from their home
+        hospital, with distanceKm on each item.
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+          example: '23.75'
+        - name: lng
+          in: query
+          schema:
+            type: number
+          example: '90.39'
+        - name: radiusKm
+          in: query
+          schema:
+            type: integer
+          description: 0.5 to 50
+          example: '10'
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: Optional ambulance type filter
+          example: ICU
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/ambulances/{ambulanceId}:
+    get:
+      tags:
+        - Ambulances
+      summary: Get ambulance
+      parameters:
+        - name: ambulanceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    patch:
+      tags:
+        - Ambulances
+      summary: Update ambulance
+      description: Admin only.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"status\": \"MAINTENANCE\"\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: ambulanceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Ambulances
+      summary: Delete ambulance
+      description: Admin only. Soft delete.
+      parameters:
+        - name: ambulanceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/requests:
+    post:
+      tags:
+        - Emergency requests
+      summary: Create request
+      description: >-
+        Patient only. Starts a PENDING request and writes the first audit log
+        entry.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"pickupAddress\": \"House 42, Road 11, Banani\",\n 
+                \"pickupLat\": 23.7936,\n  \"pickupLng\": 90.4043,\n 
+                \"priority\": \"HIGH\",\n  \"destinationHospitalId\":
+                \"{{hospitalId}}\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    get:
+      tags:
+        - Emergency requests
+      summary: List requests
+      description: >-
+        Admin sees everything, a driver sees trips assigned to them, a patient
+        sees their own requests.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: >-
+            Any of PENDING, ASSIGNED, EN_ROUTE_PICKUP, PICKED_UP,
+            EN_ROUTE_HOSPITAL, COMPLETED, CANCELLED
+          example: PENDING
+        - name: priority
+          in: query
+          schema:
+            type: string
+          description: CRITICAL, HIGH, or NORMAL
+          example: HIGH
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Searches pickup address
+          example: banani
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+          description: requestedAt, priority, or status
+          example: requestedAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+          example: desc
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '10'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/requests/my-assigned:
+    get:
+      tags:
+        - Emergency requests
+      summary: My assigned trips
+      description: Driver only, paginated list of trips assigned to the logged in driver.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/requests/{requestId}:
+    get:
+      tags:
+        - Emergency requests
+      summary: Get request with audit trail
+      description: >-
+        Full detail including statusLogs. Only the patient, the assigned driver,
+        or an admin can view.
+      parameters:
+        - name: requestId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/requests/{requestId}/assign:
+    post:
+      tags:
+        - Emergency requests
+      summary: Assign ambulance
+      description: >-
+        Admin only. Runs in a transaction with conditional updates, so two
+        admins cannot assign the same ambulance. Omit driverId to auto pick the
+        longest idle available driver. Returns 409 if the ambulance or driver
+        was taken.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"ambulanceId\": \"{{ambulanceId}}\",\n  \"driverId\":
+                \"{{driverUserId}}\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: requestId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/requests/{requestId}/status:
+    patch:
+      tags:
+        - Emergency requests
+      summary: Update trip status
+      description: >-
+        Assigned driver or admin only. Legal forward transitions are ASSIGNED to
+        EN_ROUTE_PICKUP, EN_ROUTE_PICKUP to PICKED_UP, PICKED_UP to
+        EN_ROUTE_HOSPITAL, EN_ROUTE_HOSPITAL to COMPLETED. Anything else returns
+        409. COMPLETED frees the ambulance and driver.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"status\": \"EN_ROUTE_PICKUP\",\n  \"note\": \"Left the
+                hospital\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: requestId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/requests/{requestId}/cancel:
+    post:
+      tags:
+        - Emergency requests
+      summary: Cancel request
+      description: >-
+        Patient who owns the request or an admin. Allowed while PENDING,
+        ASSIGNED, or EN_ROUTE_PICKUP.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"cancelReason\": \"Patient reached the hospital by
+                private car\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: requestId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/driver/me:
+    get:
+      tags:
+        - Driver
+      summary: My driver profile
+      description: Driver only.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/driver/status:
+    patch:
+      tags:
+        - Driver
+      summary: Update my status
+      description: >-
+        Driver only. AVAILABLE, ON_TRIP, or OFFLINE. Going offline while on a
+        trip returns 409.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"status\": \"AVAILABLE\"\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/driver/location:
+    patch:
+      tags:
+        - Driver
+      summary: Update my location
+      description: Driver only, stores the driver's current position.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"lat\": 23.79,\n  \"lng\": 90.40\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/payments/initiate:
+    post:
+      tags:
+        - Payments
+      summary: Initiate checkout
+      description: >-
+        Patient only, for a COMPLETED trip. Creates a Stripe checkout session
+        and returns its URL. Prices are flat by ambulance type: BASIC 15, ICU
+        35, CARDIAC 60 in the checkout currency.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"requestId\": \"{{requestId}}\"\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/payments/webhook:
+    post:
+      tags:
+        - Payments
+      summary: Stripe webhook
+      description: >-
+        Called by stripe, not by you. Verifies the signature over the raw body
+        and marks the payment PAID on checkout.session.completed.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": {
+                \"object\": { \"id\": \"cs_test_x\" } }\n}"
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: stripe-signature
+          in: header
+          schema:
+            type: string
+          example: <signed by stripe>
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/payments/my:
+    get:
+      tags:
+        - Payments
+      summary: My payments
+      description: Patient only, their own payment history.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/payments/{paymentId}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment
+      description: Owner or admin.
+      parameters:
+        - name: paymentId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/payments/callback/success:
+    get:
+      tags:
+        - Payments
+      summary: Checkout success callback
+      description: >-
+        Stripe redirects the payer's browser here after checkout. Reports the
+        payment status.
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: sessionId
+          in: query
+          schema:
+            type: string
+          example: cs_test_x
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/payments/callback/cancel:
+    get:
+      tags:
+        - Payments
+      summary: Checkout cancel callback
+      description: >-
+        Stripe redirects here if the payer cancels. Expires the session so a
+        stale link cannot be paid later.
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: sessionId
+          in: query
+          schema:
+            type: string
+          example: cs_test_x
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/feedback:
+    post:
+      tags:
+        - Feedback
+      summary: Rate a completed trip
+      description: Patient only, once per completed trip.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"requestId\": \"{{requestId}}\",\n  \"rating\": 5,\n 
+                \"comment\": \"Fast and professional\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/feedback/request/{requestId}:
+    get:
+      tags:
+        - Feedback
+      summary: Feedback for a request
+      parameters:
+        - name: requestId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/drivers:
+    post:
+      tags:
+        - Admin
+      summary: Create driver account
+      description: >-
+        Admin only. Creates the user with the DRIVER role and a driver profile
+        in one transaction.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"name\": \"Karim Driver\",\n  \"email\":
+                \"karim@example.com\",\n  \"password\": \"Password123\",\n 
+                \"phone\": \"+8801833445566\",\n  \"licenseNumber\":
+                \"DL-771234\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/users:
+    get:
+      tags:
+        - Admin
+      summary: List users
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+          description: PATIENT, DRIVER, or ADMIN
+          example: DRIVER
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Searches name and email
+          example: karim
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '10'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/users/{id}/role:
+    patch:
+      tags:
+        - Admin
+      summary: Update user role
+      description: >-
+        Admin only. Moving a user into DRIVER creates a driver profile if they
+        do not have one.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"role\": \"DRIVER\"\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: <user id>
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/dashboard-stats:
+    get:
+      tags:
+        - Admin
+      summary: Dashboard stats
+      description: Counts of users, ambulances, requests by status, and total paid revenue.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/audit-logs:
+    get:
+      tags:
+        - Admin
+      summary: Audit logs
+      description: Every request status change with actor, from and to status, and note.
+      parameters:
+        - name: requestId
+          in: query
+          schema:
+            type: string
+          description: Optional filter by request
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '20'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Pings the database. No auth needed.
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}

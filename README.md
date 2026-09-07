@@ -39,7 +39,31 @@ The seed also creates three hospitals and three ambulances. Create patient and d
 
 ## API documentation
 
-A complete Postman collection covering all 42 endpoints is in `docs/postman_collection.json`. Import it into Postman, set the `baseUrl` variable, and log in, the login request stores the token in the collection variable automatically.
+**Live API:** https://emergency-ambulance-dispatch-api.vercel.app
+
+All 42 endpoints are documented in two formats:
+
+| Format | File | Use |
+|---|---|---|
+| Postman collection | [`docs/postman_collection.json`](docs/postman_collection.json) | Import into Postman, run requests, record demo video |
+| OpenAPI 3.0 | [`docs/openapi.yaml`](docs/openapi.yaml) | Swagger Editor, codegen, or any OpenAPI viewer |
+
+### Postman
+
+1. Postman → **Import** → upload `docs/postman_collection.json`
+2. `baseUrl` defaults to the live deployment; switch to `http://localhost:5000` for local dev
+3. Run **Auth → Login** (demo admin above) — the test script saves `{{token}}` automatically
+4. Folders map to roles: Auth, Hospitals, Ambulances, Emergency requests, Driver, Payments, Feedback, Admin, Health
+
+To get a public documentation link for submission (`documenter.getpostman.com/...`): import the collection, open **View complete documentation**, click **Publish docs**, and copy the URL.
+
+### OpenAPI
+
+Open `docs/openapi.yaml` in [Swagger Editor](https://editor.swagger.io/) (File → Import file). Regenerate from the Postman collection after edits:
+
+```bash
+bun run docs:openapi
+```
 
 ## Getting started
 
