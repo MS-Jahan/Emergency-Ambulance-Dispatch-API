@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "bun run build",
+  "installCommand": "bun install",
   "builds": [
     {
       "src": "dist/server.js",
