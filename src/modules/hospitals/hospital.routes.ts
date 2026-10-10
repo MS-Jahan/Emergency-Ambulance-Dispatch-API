@@ -10,15 +10,14 @@ import {
 
 export const hospitalsRouter = Router()
 
-hospitalsRouter.use(authenticate)
-
 hospitalsRouter.get('/', validate({ query: listHospitalsQuerySchema }), list)
 hospitalsRouter.get('/:id', getOne)
-hospitalsRouter.post('/', requireRole('ADMIN'), validate({ body: createHospitalSchema }), create)
+hospitalsRouter.post('/', authenticate, requireRole('ADMIN'), validate({ body: createHospitalSchema }), create)
 hospitalsRouter.patch(
   '/:id',
+  authenticate,
   requireRole('ADMIN'),
   validate({ body: updateHospitalSchema }),
   update,
 )
-hospitalsRouter.delete('/:id', requireRole('ADMIN'), remove)
+hospitalsRouter.delete('/:id', authenticate, requireRole('ADMIN'), remove)
