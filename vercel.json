@@ -1,19 +1,16 @@
 {
-  "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "bun run build",
   "installCommand": "bun install",
-  "builds": [
-    {
-      "src": "dist/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "node_modules/.prisma/client/**",
-          "node_modules/@prisma/client/**",
-          "docs/openapi.yaml"
-        ]
-      }
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{dist/**,node_modules/.prisma/client/**,node_modules/@prisma/client/**,docs/openapi.yaml}"
     }
-  ],
-  "routes": [{ "src": "/(.*)", "dest": "dist/server.js" }]
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ]
 }

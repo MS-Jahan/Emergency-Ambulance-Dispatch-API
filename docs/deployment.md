@@ -213,15 +213,19 @@ Push to the connected GitHub branch and Vercel rebuilds and redeploys automatica
 
 Neon free tier, Vercel hobby, Stripe test mode, Google OAuth in testing mode. Nothing here needs a card or a paid plan at any point.
 
-## Deploying updates (read this before pushing)
+## Deploying updates
 
-`vercel.json` uses the legacy `builds` setting with `src: dist/server.js`. `dist/` is git-ignored and `buildCommand` is ignored when `builds` is set, so a deployment that Vercel triggers from a git push builds nothing ("Build output contains no functions") and is never aliased. Deploy from your machine instead:
+Pushes to `master` now deploy by themselves. `vercel.json` runs `bun run build` (prisma generate and tsup, output `dist/server.js`), and the serverless entry `api/index.js` re-exports that bundle. `public/.gitkeep` only exists because Vercel insists on an output directory.
 
-```bash
-bun run build
-vercel --prod --yes
-# the custom domain is pinned by hand, move it to the new deployment:
-vercel alias set <new-deployment-url> emergency-ambulance-dispatch-api.vercel.app
-```
+Two things are manual:
 
-Then check `curl https://emergency-ambulance-dispatch-api.vercel.app/api/v1/public/stats`. If you want push-to-deploy, replace the `builds` block with a function that Vercel compiles from `src/server.ts` and verify it on a preview deployment first.
+1. **The API domain is pinned.** `emergency-ambulance-dispatch-api.vercel.app` was attached by hand with `vercel alias set` and does not follow new deployments. After a push, move it:
+   ```bash
+   vercel ls                       # newest Production deployment url
+   vercel alias set <that-url> emergency-ambulance-dispatch-api.vercel.app
+   ```
+2. **Environment values are read at deploy time.** After changing an env var, redeploy (`vercel redeploy <url> --target production`), then move the alias.
+
+Check with `curl https://emergency-ambulance-dispatch-api.vercel.app/api/v1/public/stats`.
+
+History: the old `builds` config pointed at the git-ignored `dist/server.js`, so git-triggered deployments were empty. It only worked when deployed from a machine that had a local `dist/` (`bun run build && vercel --prod`).
