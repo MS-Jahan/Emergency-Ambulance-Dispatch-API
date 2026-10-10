@@ -103,6 +103,7 @@ Values for the first deploy:
 | `RESEND_API_KEY` | Optional: Resend API key for transactional emails (`re_...`) |
 | `EMAIL_FROM` | Optional: Sender address for emails, e.g. `RapidAid <no-reply@example.com>` |
 | `ADMIN_NOTIFY_EMAIL` | Optional: Recipient email for admin contact form notifications |
+| `PROXY_SHARED_SECRET` | Optional, 16+ characters, same value as on the frontend project. The frontend forwards each visitor's address with it so rate limits are per visitor instead of one shared bucket. Unset means limits key on the connecting address. |
 | `SMS_PROVIDER` | Optional: SMS dispatch provider (`twilio` or `webhook`) |
 | `TWILIO_ACCOUNT_SID` | Optional: Twilio Account SID (`AC...`) |
 | `TWILIO_AUTH_TOKEN` | Optional: Twilio Auth Token |

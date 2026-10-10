@@ -47,6 +47,8 @@ export function createApp(): Express {
       credentials: true,
     }),
   )
+  // On Vercel the platform edge sets x-forwarded-for, so trust one hop for direct callers
+  if (process.env.VERCEL) app.set('trust proxy', 1)
   app.use(globalLimiter)
 
   // Stripe posts here with a signature over the raw body, so this must sit above the json parser

@@ -34,6 +34,13 @@ const envSchema = z.object({
     (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
     z.string().optional(),
   ),
+  // Shared with the web frontend so rate limits key on the visitor, not on the frontend's address.
+  // Optional: when unset the api falls back to the connecting address.
+  PROXY_SHARED_SECRET: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.string().min(16).optional(),
+  ),
+
   ADMIN_NOTIFY_EMAIL: z.preprocess(
     (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
     z.string().email().optional(),

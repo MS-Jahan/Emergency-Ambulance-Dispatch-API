@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit'
 import type { ErrorEnvelope } from '../shared/types'
+import { clientKey } from './clientKey'
 
 const rateLimitBody: ErrorEnvelope = {
   success: false,
@@ -15,6 +16,8 @@ export const globalLimiter = rateLimit({
   limit: 300,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  keyGenerator: clientKey,
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
   skip: skipInTests,
   message: rateLimitBody,
 })
@@ -24,6 +27,8 @@ export const authLimiter = rateLimit({
   limit: 30,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  keyGenerator: clientKey,
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
   skip: skipInTests,
   message: rateLimitBody,
 })
@@ -33,7 +38,7 @@ export const contactLimiter = rateLimit({
   limit: 5,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
-  keyGenerator: (req) => (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1',
-  validate: { keyGeneratorIpFallback: false, xForwardedForHeader: false },
+  keyGenerator: clientKey,
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
   message: rateLimitBody,
 })

@@ -9,7 +9,10 @@ describe('contact form and admin messages', () => {
     // Too short message
     await request(app)
       .post('/api/v1/contact')
-      .set('x-forwarded-for', '10.1.0.1')
+      .set({
+        'x-client-ip': '10.1.0.1',
+        'x-proxy-secret': process.env.PROXY_SHARED_SECRET as string,
+      })
       .send({
         name: 'John',
         email: 'john@example.com',
@@ -20,7 +23,10 @@ describe('contact form and admin messages', () => {
     // Bad email
     await request(app)
       .post('/api/v1/contact')
-      .set('x-forwarded-for', '10.1.0.2')
+      .set({
+        'x-client-ip': '10.1.0.2',
+        'x-proxy-secret': process.env.PROXY_SHARED_SECRET as string,
+      })
       .send({
         name: 'John',
         email: 'not-an-email',
@@ -32,7 +38,10 @@ describe('contact form and admin messages', () => {
   it('rejects submissions with filled honeypot field', async () => {
     const res = await request(app)
       .post('/api/v1/contact')
-      .set('x-forwarded-for', '10.1.0.3')
+      .set({
+        'x-client-ip': '10.1.0.3',
+        'x-proxy-secret': process.env.PROXY_SHARED_SECRET as string,
+      })
       .send({
         name: 'Spam Bot',
         email: 'spammer@example.com',
@@ -47,7 +56,10 @@ describe('contact form and admin messages', () => {
   it('submits a valid contact message and stores it in the database', async () => {
     const res = await request(app)
       .post('/api/v1/contact')
-      .set('x-forwarded-for', '10.1.0.4')
+      .set({
+        'x-client-ip': '10.1.0.4',
+        'x-proxy-secret': process.env.PROXY_SHARED_SECRET as string,
+      })
       .send({
         name: 'Alice Smith',
         email: 'alice@example.com',
