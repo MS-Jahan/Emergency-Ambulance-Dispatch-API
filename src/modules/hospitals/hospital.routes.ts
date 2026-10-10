@@ -13,7 +13,13 @@ export const hospitalsRouter = Router()
 hospitalsRouter.get('/', validate({ query: listHospitalsQuerySchema }), list)
 hospitalsRouter.get('/:id', getOne)
 // Reads are public so the landing page and signed-out visitors can browse hospitals
-hospitalsRouter.post('/', authenticate, requireRole('ADMIN'), validate({ body: createHospitalSchema }), create)
+hospitalsRouter.post(
+  '/',
+  authenticate,
+  requireRole('ADMIN'),
+  validate({ body: createHospitalSchema }),
+  create,
+)
 hospitalsRouter.patch(
   '/:id',
   authenticate,

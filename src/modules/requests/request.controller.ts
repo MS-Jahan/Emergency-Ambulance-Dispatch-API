@@ -15,6 +15,7 @@ import type {
   AssignRequestInput,
   CancelRequestInput,
   CreateRequestInput,
+  ListMyAssignedQuery,
   ListRequestsQuery,
   UpdateStatusInput,
 } from './request.validation'
@@ -75,7 +76,7 @@ export const myAssigned = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) throw AppError.unauthorized()
   const result = await listMyAssignedRequests(
     req.user.id,
-    req.validatedQuery as unknown as ListRequestsQuery,
+    req.validatedQuery as unknown as ListMyAssignedQuery,
   )
   sendResponse(res, { message: 'Assigned requests fetched', data: result })
 })

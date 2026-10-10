@@ -73,3 +73,29 @@ export async function updateMyLocation(
   })
   return { currentLat: input.lat, currentLng: input.lng }
 }
+
+export async function getMyStats(userId: string) {
+  const [completedTrips, activeTrips, rating, paid] = await prisma.$transaction([
+    prisma.emergencyRequest.count({ where: { driverId: userId, status: 'COMPLETED' } }),
+    prisma.emergencyRequest.count({
+      where: { driverId: userId, status: { notIn: ['COMPLETED', 'CANCELLED'] } },
+    }),
+    prisma.feedback.aggregate({
+      where: { driverId: userId, deletedAt: null },
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
+    prisma.payment.aggregate({
+      where: { status: 'PAID', request: { driverId: userId } },
+      _sum: { amount: true },
+    }),
+  ])
+  const avg = rating._avg.rating
+  return {
+    completedTrips,
+    activeTrips,
+    averageRating: avg === null ? null : Math.round(avg * 10) / 10,
+    ratingCount: rating._count._all,
+    fareTotal: paid._sum.amount ? Number(paid._sum.amount) : 0,
+  }
+}

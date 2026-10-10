@@ -25,6 +25,23 @@ export const listRequestsQuerySchema = paginationQuerySchema.extend({
   q: z.string().max(250).optional(),
 })
 
+const requestStatusEnum = z.enum([
+  'PENDING',
+  'ASSIGNED',
+  'EN_ROUTE_PICKUP',
+  'PICKED_UP',
+  'EN_ROUTE_HOSPITAL',
+  'COMPLETED',
+  'CANCELLED',
+])
+
+export const listMyAssignedQuerySchema = paginationQuerySchema.extend({
+  status: requestStatusEnum.optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  q: z.string().max(250).optional(),
+})
+
 export const assignRequestSchema = z.object({
   ambulanceId: z.string().cuid(),
   driverId: z.string().cuid().optional(),
@@ -42,6 +59,7 @@ export const cancelRequestSchema = z.object({
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>
 export type ListRequestsQuery = z.infer<typeof listRequestsQuerySchema>
+export type ListMyAssignedQuery = z.infer<typeof listMyAssignedQuerySchema>
 export type AssignRequestInput = z.infer<typeof assignRequestSchema>
 export type UpdateStatusInput = z.infer<typeof updateStatusSchema>
 export type CancelRequestInput = z.infer<typeof cancelRequestSchema>

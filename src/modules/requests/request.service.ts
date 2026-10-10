@@ -7,6 +7,7 @@ import type {
   AssignRequestInput,
   CancelRequestInput,
   CreateRequestInput,
+  ListMyAssignedQuery,
   ListRequestsQuery,
   UpdateStatusInput,
 } from './request.validation'
@@ -346,15 +347,31 @@ export async function cancelRequest(requestId: string, actor: AuthUser, input: C
   })
 }
 
-export async function listMyAssignedRequests(driverId: string, query: ListRequestsQuery) {
-  const { page, limit } = query
+const MY_ASSIGNED_SELECT = {
+  ...LIST_SELECT,
+  patient: { select: { id: true, name: true, phone: true } },
+} satisfies Prisma.EmergencyRequestSelect
+
+export async function listMyAssignedRequests(driverId: string, query: ListMyAssignedQuery) {
+  const { page, limit, status, from, to, q } = query
 
   const where: Prisma.EmergencyRequestWhereInput = { driverId }
+  if (status) where.status = status
+  if (from || to) {
+    where.requestedAt = { ...(from && { gte: from }), ...(to && { lte: to }) }
+  }
+  if (q) {
+    where.OR = [
+      { pickupAddress: { contains: q, mode: 'insensitive' } },
+      { destinationHospital: { name: { contains: q, mode: 'insensitive' } } },
+      { patient: { name: { contains: q, mode: 'insensitive' } } },
+    ]
+  }
 
   const [items, total] = await prisma.$transaction([
     prisma.emergencyRequest.findMany({
       where,
-      select: LIST_SELECT,
+      select: MY_ASSIGNED_SELECT,
       orderBy: { requestedAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,

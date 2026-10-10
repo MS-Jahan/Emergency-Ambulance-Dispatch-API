@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 import { AppError } from '../../shared/AppError'
 import { catchAsync } from '../../shared/catchAsync'
 import { sendResponse } from '../../shared/sendResponse'
-import { getMyProfile, updateMyLocation, updateMyStatus } from './driver.service'
+import { getMyProfile, getMyStats, updateMyLocation, updateMyStatus } from './driver.service'
 import type { UpdateDriverLocationInput, UpdateDriverStatusInput } from './driver.validation'
 
 export const getMe = catchAsync(async (req: Request, res: Response) => {
@@ -21,4 +21,10 @@ export const updateLocation = catchAsync(async (req: Request, res: Response) => 
   if (!req.user) throw AppError.unauthorized()
   const location = await updateMyLocation(req.user.id, req.body as UpdateDriverLocationInput)
   sendResponse(res, { message: 'Driver location updated', data: { location } })
+})
+
+export const getStats = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized()
+  const stats = await getMyStats(req.user.id)
+  sendResponse(res, { message: 'Driver stats fetched', data: { stats } })
 })

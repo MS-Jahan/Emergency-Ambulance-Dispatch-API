@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { authenticate, requireRole } from '../../middleware/auth'
 import { validate } from '../../middleware/validate'
-import { paginationQuerySchema } from '../../shared/paginate'
 import {
   assign,
   cancel,
@@ -15,6 +14,7 @@ import {
   assignRequestSchema,
   cancelRequestSchema,
   createRequestSchema,
+  listMyAssignedQuerySchema,
   listRequestsQuerySchema,
   updateStatusSchema,
 } from './request.validation'
@@ -32,7 +32,7 @@ requestsRouter.get(
 requestsRouter.get(
   '/my-assigned',
   requireRole('DRIVER'),
-  validate({ query: paginationQuerySchema }),
+  validate({ query: listMyAssignedQuerySchema }),
   myAssigned,
 )
 requestsRouter.get('/:id', getOne)
