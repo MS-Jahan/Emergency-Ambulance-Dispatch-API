@@ -726,6 +726,30 @@
           }
         },
         {
+          "name": "Report summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/reports/summary?from=2026-10-01&to=2026-10-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "reports", "summary"]
+            },
+            "description": "Admin only. Defaults to the last 7 days, max 90."
+          }
+        },
+        {
+          "name": "List feedback",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/feedback?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "feedback"]
+            },
+            "description": "Admin only. Newest first."
+          }
+        },
+        {
           "name": "Audit logs",
           "request": {
             "method": "GET",

@@ -216,7 +216,7 @@ paths:
       tags:
         - Hospitals
       summary: List hospitals
-      description: Paginated hospital list with search. Available to any logged in user.
+      description: Paginated hospital list with search. Public, no token needed.
       parameters:
         - name: page
           in: query
@@ -1034,6 +1034,70 @@ paths:
             type: string
           required: true
           example: <user id>
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/public/stats:
+    get:
+      tags:
+        - Public
+      summary: Public stats
+      description: No auth. Hospital, available ambulance and completed request counts. Cached for 60 seconds.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/driver/me/stats:
+    get:
+      tags:
+        - Driver
+      summary: Driver stats
+      description: Driver only. Completed and active trips, average rating, rating count and paid fare total.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/reports/summary:
+    get:
+      tags:
+        - Admin
+      summary: Report summary
+      description: Admin only. Per day counts and average response minutes, plus breakdowns by priority, ambulance type and cancellation reason. Defaults to the last 7 days, max 90.
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+          description: ISO date
+        - name: to
+          in: query
+          schema:
+            type: string
+          description: ISO date
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/feedback:
+    get:
+      tags:
+        - Admin
+      summary: List feedback
+      description: Admin only. Paginated feedback, newest first.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
       responses:
         '200':
           description: Successful response
