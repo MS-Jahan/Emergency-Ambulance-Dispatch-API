@@ -15,6 +15,7 @@ import {
   paymentsRouter,
   paymentWebhookRouter,
 } from './modules/payments/payment.routes'
+import { publicRouter } from './modules/public/public.routes'
 import { requestsRouter } from './modules/requests/request.routes'
 import { usersRouter } from './modules/users/users.routes'
 import { docsRouter } from './routes/docs.routes'
@@ -57,6 +58,7 @@ export function createApp(): Express {
 
   app.use('/api/v1/health', healthRouter)
   app.use('/api/v1', docsRouter)
+  app.use('/api/v1/public', publicRouter)
   app.use('/api/v1/auth', authRouter)
   app.use('/api/v1/users', usersRouter)
   app.use('/api/v1/hospitals', hospitalsRouter)
