@@ -9,5 +9,10 @@ export const updateDriverLocationSchema = z.object({
   lng: z.number().min(-180).max(180),
 })
 
+export const updateAmbulanceStatusSchema = z.object({
+  status: z.enum(['AVAILABLE', 'MAINTENANCE']),
+})
+
 export type UpdateDriverStatusInput = z.infer<typeof updateDriverStatusSchema>
 export type UpdateDriverLocationInput = z.infer<typeof updateDriverLocationSchema>
+export type UpdateAmbulanceStatusInput = z.infer<typeof updateAmbulanceStatusSchema>

@@ -9,6 +9,7 @@ import { ambulancesRouter } from './modules/ambulances/ambulance.routes'
 import { authRouter } from './modules/auth/auth.routes'
 import { contactRouter } from './modules/contact/contact.routes'
 import { driverRouter } from './modules/drivers/driver.routes'
+import { faresRouter } from './modules/fares/fares.routes'
 import { feedbackRouter } from './modules/feedback/feedback.routes'
 import { hospitalsRouter } from './modules/hospitals/hospital.routes'
 import {
@@ -61,6 +62,7 @@ export function createApp(): Express {
   app.use('/api/v1', docsRouter)
   app.use('/api/v1/public', publicRouter)
   app.use('/api/v1/contact', contactRouter)
+  app.use('/api/v1/fares', faresRouter)
   app.use('/api/v1/auth', authRouter)
   app.use('/api/v1/users', usersRouter)
   app.use('/api/v1/hospitals', hospitalsRouter)

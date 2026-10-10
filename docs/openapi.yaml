@@ -211,6 +211,31 @@ paths:
           description: Successful response
           content:
             application/json: {}
+  /api/v1/users/me/password:
+    patch:
+      tags:
+        - Auth
+      summary: Change password
+      description: Updates password for authenticated user and revokes all refresh tokens.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password updated successfully
+        '400':
+          description: Invalid password or google account
   /api/v1/hospitals:
     get:
       tags:
@@ -777,6 +802,28 @@ paths:
           description: Successful response
           content:
             application/json: {}
+  /api/v1/driver/ambulance/status:
+    patch:
+      tags:
+        - Driver
+      summary: Toggle ambulance status
+      description: Allows a driver to mark their assigned ambulance as AVAILABLE or MAINTENANCE.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [AVAILABLE, MAINTENANCE]
+      responses:
+        '200':
+          description: Ambulance status updated
+        '409':
+          description: Active trip in progress
   /api/v1/payments/initiate:
     post:
       tags:
@@ -1207,6 +1254,22 @@ paths:
       responses:
         '200':
           description: Status updated
+  /api/v1/fares/estimate:
+    get:
+      tags:
+        - Public
+      summary: Fare estimate
+      description: Returns flat trip rate estimate by ambulance type.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [BASIC, ICU, CARDIAC]
+      responses:
+        '200':
+          description: Fare estimate calculated
   /api/v1/health:
     get:
       tags:

@@ -2,8 +2,18 @@ import type { Request, Response } from 'express'
 import { AppError } from '../../shared/AppError'
 import { catchAsync } from '../../shared/catchAsync'
 import { sendResponse } from '../../shared/sendResponse'
-import { getMyProfile, getMyStats, updateMyLocation, updateMyStatus } from './driver.service'
-import type { UpdateDriverLocationInput, UpdateDriverStatusInput } from './driver.validation'
+import {
+  getMyProfile,
+  getMyStats,
+  updateMyAmbulanceStatus,
+  updateMyLocation,
+  updateMyStatus,
+} from './driver.service'
+import type {
+  UpdateAmbulanceStatusInput,
+  UpdateDriverLocationInput,
+  UpdateDriverStatusInput,
+} from './driver.validation'
 
 export const getMe = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) throw AppError.unauthorized()
@@ -27,4 +37,13 @@ export const getStats = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) throw AppError.unauthorized()
   const stats = await getMyStats(req.user.id)
   sendResponse(res, { message: 'Driver stats fetched', data: { stats } })
+})
+
+export const updateAmbulanceStatus = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized()
+  const ambulance = await updateMyAmbulanceStatus(
+    req.user.id,
+    req.body as UpdateAmbulanceStatusInput,
+  )
+  sendResponse(res, { message: 'Ambulance status updated', data: { ambulance } })
 })

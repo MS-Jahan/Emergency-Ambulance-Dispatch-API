@@ -211,3 +211,37 @@ export async function updateProfile(
     select: PUBLIC_USER_SELECT,
   })
 }
+
+export async function changePassword(
+  userId: string,
+  input: { currentPassword: string; newPassword: string },
+): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true },
+  })
+  if (!user) {
+    throw AppError.notFound('User not found')
+  }
+  if (!user.password) {
+    throw AppError.badRequest('Google-authenticated accounts do not have a password')
+  }
+
+  const matches = await bcrypt.compare(input.currentPassword, user.password)
+  if (!matches) {
+    throw AppError.badRequest('Current password is incorrect')
+  }
+
+  const newHash = await bcrypt.hash(input.newPassword, 10)
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { password: newHash },
+    }),
+    prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ])
+}

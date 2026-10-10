@@ -4,6 +4,7 @@ import { AppError } from '../../shared/AppError'
 import { catchAsync } from '../../shared/catchAsync'
 import { sendResponse } from '../../shared/sendResponse'
 import {
+  changePassword,
   googleLogin,
   loginUser,
   registerUser,
@@ -12,6 +13,7 @@ import {
   updateProfile,
 } from './auth.service'
 import type {
+  ChangePasswordInput,
   GoogleLoginInput,
   LoginInput,
   RefreshTokenInput,
@@ -70,4 +72,12 @@ export const updateMe = catchAsync(async (req: Request, res: Response) => {
   }
   const user = await updateProfile(req.user.id, req.body as UpdateProfileInput)
   sendResponse(res, { message: 'Profile updated', data: { user } })
+})
+
+export const changeMyPassword = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw AppError.unauthorized()
+  }
+  await changePassword(req.user.id, req.body as ChangePasswordInput)
+  sendResponse(res, { message: 'Password updated successfully', data: null })
 })

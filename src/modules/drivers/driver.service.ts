@@ -1,7 +1,11 @@
 import type { DriverProfile, DriverStatus } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../shared/AppError'
-import type { UpdateDriverLocationInput, UpdateDriverStatusInput } from './driver.validation'
+import type {
+  UpdateAmbulanceStatusInput,
+  UpdateDriverLocationInput,
+  UpdateDriverStatusInput,
+} from './driver.validation'
 
 const PROFILE_SELECT = {
   id: true,
@@ -98,4 +102,42 @@ export async function getMyStats(userId: string) {
     ratingCount: rating._count._all,
     fareTotal: paid._sum.amount ? Number(paid._sum.amount) : 0,
   }
+}
+
+export async function updateMyAmbulanceStatus(userId: string, input: UpdateAmbulanceStatusInput) {
+  const profile = await getProfileOrThrow(userId)
+
+  if (!profile.ambulanceId) {
+    throw AppError.notFound('No ambulance assigned to this driver profile')
+  }
+
+  // Refuse while the driver has an active trip
+  const activeTrip = await prisma.emergencyRequest.findFirst({
+    where: {
+      driverId: userId,
+      status: { notIn: ['COMPLETED', 'CANCELLED'] },
+    },
+    select: { id: true },
+  })
+  if (activeTrip) {
+    throw AppError.conflict('Cannot change ambulance status while on an active trip')
+  }
+
+  // Refuse while ambulance is ON_TRIP
+  const ambulance = await prisma.ambulance.findUnique({
+    where: { id: profile.ambulanceId },
+  })
+  if (!ambulance) {
+    throw AppError.notFound('Ambulance not found')
+  }
+  if (ambulance.status === 'ON_TRIP') {
+    throw AppError.conflict('Cannot change ambulance status while it is on a trip')
+  }
+
+  const updated = await prisma.ambulance.update({
+    where: { id: profile.ambulanceId },
+    data: { status: input.status },
+  })
+
+  return updated
 }
