@@ -99,6 +99,7 @@ Values for the first deploy:
 | `STRIPE_CURRENCY` | `usd` |
 | `APP_BASE_URL` | Placeholder for now, real value in step 7 |
 | `CORS_ORIGIN` | Wherever a frontend would live, e.g. `http://localhost:3000` |
+| `FRONTEND_URL` | The deployed frontend origin, no trailing slash. Required in production: Stripe redirects the payer to `<FRONTEND_URL>/payment/success` |
 
 Generate good secrets with `openssl rand -hex 32`.
 

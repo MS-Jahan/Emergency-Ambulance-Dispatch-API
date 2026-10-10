@@ -117,6 +117,7 @@ See `.env.example` for the full list. The important ones:
 | `STRIPE_WEBHOOK_SECRET` | Signing secret of the `checkout.session.completed` webhook endpoint |
 | `APP_BASE_URL` | Public base url of the API, used to build Stripe callback urls |
 | `CORS_ORIGIN` | Comma separated list of allowed origins |
+| `FRONTEND_URL` | Public base url of the web frontend; Stripe sends the payer back to `/payment/success` and `/payment/cancel` here |
 
 ## Scripts
 

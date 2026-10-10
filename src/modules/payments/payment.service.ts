@@ -77,8 +77,8 @@ export async function initiatePayment(patientId: string, input: InitiatePaymentI
         },
       },
     ],
-    success_url: `${env.APP_BASE_URL}/api/v1/payments/callback/success?sessionId={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${env.APP_BASE_URL}/api/v1/payments/callback/cancel?sessionId={CHECKOUT_SESSION_ID}`,
+    success_url: `${env.FRONTEND_URL}/payment/success?sessionId={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${env.FRONTEND_URL}/payment/cancel?sessionId={CHECKOUT_SESSION_ID}`,
     metadata: { requestId: request.id, patientId: request.patientId },
   })
 

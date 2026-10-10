@@ -21,6 +21,9 @@ const envSchema = z.object({
 
   // Public base url of this api, used to build stripe checkout callback urls
   APP_BASE_URL: z.string().url().default('http://localhost:5000'),
+
+  // Public base url of the web frontend, stripe sends the payer back here after checkout
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 })
 
 const parsed = envSchema.safeParse(process.env)
