@@ -7,6 +7,11 @@ export const createRequestSchema = z.object({
   pickupLng: z.number().min(-180).max(180),
   priority: z.enum(['CRITICAL', 'HIGH', 'NORMAL']).default('NORMAL'),
   destinationHospitalId: z.string().cuid().optional(),
+  requestedAmbulanceType: z.enum(['BASIC', 'ICU', 'CARDIAC']).optional(),
+  patientName: z.string().trim().min(2).max(80).optional(),
+  patientAge: z.number().int().min(0).max(120).optional(),
+  notes: z.string().trim().max(500).optional(),
+  callbackPhone: z.string().trim().min(7).max(20).optional(),
 })
 
 export const listRequestsQuerySchema = paginationQuerySchema.extend({

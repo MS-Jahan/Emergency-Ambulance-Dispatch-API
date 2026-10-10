@@ -118,6 +118,13 @@ export async function findNearbyAmbulances(query: NearbyQuery) {
     select: {
       ...LIST_SELECT,
       homeHospital: { select: { id: true, name: true, lat: true, lng: true } },
+      drivers: {
+        where: { user: { deletedAt: null } },
+        select: {
+          user: { select: { id: true, name: true, phone: true } },
+        },
+        take: 1,
+      },
     },
   })
 
@@ -131,7 +138,12 @@ export async function findNearbyAmbulances(query: NearbyQuery) {
     .map((a) => {
       const h = a.homeHospital
       const distanceKm = h ? haversineKm(lat, lng, h.lat, h.lng) : Number.POSITIVE_INFINITY
-      return { ...a, distanceKm: Number(distanceKm.toFixed(2)) }
+      const driverUser = a.drivers[0]?.user
+      const driver = driverUser
+        ? { id: driverUser.id, name: driverUser.name, phone: driverUser.phone }
+        : null
+      const { drivers, ...rest } = a
+      return { ...rest, driver, distanceKm: Number(distanceKm.toFixed(2)) }
     })
     .filter((a) => a.distanceKm <= radiusKm)
     .sort((a, b) => a.distanceKm - b.distanceKm)

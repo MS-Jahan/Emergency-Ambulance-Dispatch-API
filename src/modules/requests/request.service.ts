@@ -59,6 +59,11 @@ const LIST_SELECT = {
   pickupLng: true,
   priority: true,
   status: true,
+  requestedAmbulanceType: true,
+  patientName: true,
+  patientAge: true,
+  notes: true,
+  callbackPhone: true,
   requestedAt: true,
   assignedAt: true,
   completedAt: true,
@@ -118,6 +123,21 @@ export async function createRequest(patientId: string, input: CreateRequestInput
     }
   }
 
+  let patientName = input.patientName
+  let callbackPhone = input.callbackPhone
+  if (!patientName || !callbackPhone) {
+    const user = await prisma.user.findUnique({
+      where: { id: patientId },
+      select: { name: true, phone: true },
+    })
+    if (!patientName && user?.name) {
+      patientName = user.name
+    }
+    if (!callbackPhone && user?.phone) {
+      callbackPhone = user.phone
+    }
+  }
+
   return prisma.$transaction(async (tx) => {
     const request = await tx.emergencyRequest.create({
       data: {
@@ -127,6 +147,11 @@ export async function createRequest(patientId: string, input: CreateRequestInput
         pickupLng: input.pickupLng,
         priority: input.priority,
         destinationHospitalId: input.destinationHospitalId,
+        requestedAmbulanceType: input.requestedAmbulanceType,
+        patientName,
+        patientAge: input.patientAge,
+        notes: input.notes,
+        callbackPhone,
         status: 'PENDING',
       },
     })

@@ -387,4 +387,111 @@ describe('status transitions: state machine and audit', () => {
     expect(typeof hosp.lng).toBe('number')
     expect(hosp.phone).toBe(hospital.phone)
   })
+
+  it('creates a request with intake fields and returns them in list and detail', async () => {
+    const { patient } = await setupDispatchFixture()
+    const resCreate = await request(app)
+      .post('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({
+        pickupAddress: 'House 42, Road 11, Banani',
+        pickupLat: 23.7936,
+        pickupLng: 90.4043,
+        priority: 'CRITICAL',
+        requestedAmbulanceType: 'ICU',
+        patientName: 'Jane Doe',
+        patientAge: 42,
+        notes: 'Severe chest pain, oxygen required',
+        callbackPhone: '+8801812345678',
+      })
+      .expect(201)
+
+    const req = resCreate.body.data.request
+    expect(req.requestedAmbulanceType).toBe('ICU')
+    expect(req.patientName).toBe('Jane Doe')
+    expect(req.patientAge).toBe(42)
+    expect(req.notes).toBe('Severe chest pain, oxygen required')
+    expect(req.callbackPhone).toBe('+8801812345678')
+
+    // Detail check
+    const resDetail = await request(app)
+      .get(`/api/v1/requests/${req.id}`)
+      .set('Authorization', `Bearer ${patient.token}`)
+      .expect(200)
+    const detail = resDetail.body.data.request
+    expect(detail.requestedAmbulanceType).toBe('ICU')
+    expect(detail.patientName).toBe('Jane Doe')
+    expect(detail.patientAge).toBe(42)
+    expect(detail.notes).toBe('Severe chest pain, oxygen required')
+    expect(detail.callbackPhone).toBe('+8801812345678')
+
+    // List check
+    const resList = await request(app)
+      .get('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .expect(200)
+    const listItem = resList.body.data.items[0]
+    expect(listItem.requestedAmbulanceType).toBe('ICU')
+    expect(listItem.patientName).toBe('Jane Doe')
+    expect(listItem.patientAge).toBe(42)
+    expect(listItem.notes).toBe('Severe chest pain, oxygen required')
+    expect(listItem.callbackPhone).toBe('+8801812345678')
+  })
+
+  it('defaults patientName and callbackPhone from account when omitted', async () => {
+    const { patient } = await setupDispatchFixture()
+    const resCreate = await request(app)
+      .post('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({
+        pickupAddress: 'House 42, Road 11, Banani',
+        pickupLat: 23.7936,
+        pickupLng: 90.4043,
+        priority: 'NORMAL',
+      })
+      .expect(201)
+
+    const req = resCreate.body.data.request
+    expect(req.patientName).toBe(patient.name)
+    expect(req.callbackPhone).toBe(patient.phone)
+    expect(req.requestedAmbulanceType).toBeNull()
+    expect(req.patientAge).toBeNull()
+    expect(req.notes).toBeNull()
+  })
+
+  it('validates intake fields on request creation', async () => {
+    const { patient } = await setupDispatchFixture()
+    await request(app)
+      .post('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({
+        pickupAddress: 'House 42, Road 11, Banani',
+        pickupLat: 23.7936,
+        pickupLng: 90.4043,
+        requestedAmbulanceType: 'INVALID_TYPE',
+      })
+      .expect(400)
+
+    await request(app)
+      .post('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({
+        pickupAddress: 'House 42, Road 11, Banani',
+        pickupLat: 23.7936,
+        pickupLng: 90.4043,
+        patientAge: 150,
+      })
+      .expect(400)
+
+    await request(app)
+      .post('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({
+        pickupAddress: 'House 42, Road 11, Banani',
+        pickupLat: 23.7936,
+        pickupLng: 90.4043,
+        callbackPhone: '123',
+      })
+      .expect(400)
+  })
 })

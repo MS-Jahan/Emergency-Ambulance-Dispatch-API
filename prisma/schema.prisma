@@ -146,6 +146,11 @@ model EmergencyRequest {
   destinationHospitalId String?
   destinationHospital   Hospital?       @relation(fields: [destinationHospitalId], references: [id])
   cancelReason          String?
+  requestedAmbulanceType AmbulanceType?
+  patientName           String?
+  patientAge            Int?
+  notes                 String?
+  callbackPhone         String?
   requestedAt           DateTime        @default(now())
   assignedAt            DateTime?
   completedAt           DateTime?

@@ -520,7 +520,9 @@ paths:
                 "{\n  \"pickupAddress\": \"House 42, Road 11, Banani\",\n 
                 \"pickupLat\": 23.7936,\n  \"pickupLng\": 90.4043,\n 
                 \"priority\": \"HIGH\",\n  \"destinationHospitalId\":
-                \"{{hospitalId}}\"\n}"
+                \"{{hospitalId}}\",\n  \"requestedAmbulanceType\": \"ICU\",\n 
+                \"patientName\": \"John Doe\",\n  \"patientAge\": 45,\n 
+                \"notes\": \"Difficulty breathing\",\n  \"callbackPhone\": \"+8801700000000\"\n}"
       parameters:
         - name: Content-Type
           in: header

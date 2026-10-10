@@ -30,6 +30,8 @@ interface UserFixture {
   token: string
   userId: string
   email: string
+  name: string
+  phone: string | null
 }
 
 export async function createUser(
@@ -63,7 +65,13 @@ export async function createUser(
 
   // Sign directly instead of calling the login endpoint so the suite never
   // trips the auth rate limiter
-  return { token: signAccessToken(user.id, role), userId: user.id, email }
+  return {
+    token: signAccessToken(user.id, role),
+    userId: user.id,
+    email,
+    name: user.name,
+    phone: user.phone,
+  }
 }
 
 export async function createHospital(

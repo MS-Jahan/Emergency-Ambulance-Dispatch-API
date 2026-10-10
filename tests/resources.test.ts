@@ -137,6 +137,47 @@ describe('ambulances', () => {
     expect(res.body.data.items[0].distanceKm).toBeLessThan(5)
   })
 
+  it('filters nearby ambulances by type and returns assigned driver info', async () => {
+    const hospital = await createHospital({ lat: 23.75, lng: 90.39 })
+    const basicAmb = await createAmbulance(hospital.id, { type: 'BASIC' })
+    const icuAmb = await createAmbulance(hospital.id, { type: 'ICU' })
+    const driver = await createUser('DRIVER', { name: 'Driver Kabir' })
+
+    // Assign driver to the ICU ambulance
+    await prisma.driverProfile.update({
+      where: { userId: driver.userId },
+      data: { ambulanceId: icuAmb.id },
+    })
+
+    const admin = await createUser('ADMIN')
+
+    // Filter by type=ICU
+    const res = await request(app)
+      .get('/api/v1/ambulances/nearby?lat=23.75&lng=90.39&radiusKm=10&type=ICU')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .expect(200)
+
+    expect(res.body.data.items).toHaveLength(1)
+    expect(res.body.data.items[0].id).toBe(icuAmb.id)
+    expect(res.body.data.items[0].type).toBe('ICU')
+    expect(res.body.data.items[0].driver).toEqual({
+      id: driver.userId,
+      name: 'Driver Kabir',
+      phone: '+8801700000000',
+    })
+
+    // Filter by type=BASIC
+    const resBasic = await request(app)
+      .get('/api/v1/ambulances/nearby?lat=23.75&lng=90.39&radiusKm=10&type=BASIC')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .expect(200)
+
+    expect(resBasic.body.data.items).toHaveLength(1)
+    expect(resBasic.body.data.items[0].id).toBe(basicAmb.id)
+    expect(resBasic.body.data.items[0].type).toBe('BASIC')
+    expect(resBasic.body.data.items[0].driver).toBeNull()
+  })
+
   it('does not offer on trip or soft deleted ambulances in nearby search', async () => {
     const hospital = await createHospital({ lat: 23.75, lng: 90.39 })
     const busy = await createAmbulance(hospital.id)
