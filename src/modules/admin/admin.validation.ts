@@ -48,9 +48,19 @@ export const reportSummaryQuerySchema = z
 
 export const listFeedbackQuerySchema = paginationQuerySchema
 
+export const testEmailSchema = z.object({
+  to: z.string().email('Invalid email address'),
+})
+
+export const testSmsSchema = z.object({
+  to: z.string().min(1, 'Phone number is required'),
+})
+
 export type ReportSummaryQuery = z.infer<typeof reportSummaryQuerySchema>
 export type ListFeedbackQuery = z.infer<typeof listFeedbackQuerySchema>
 export type CreateDriverInput = z.infer<typeof createDriverSchema>
 export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>
 export type ListAuditLogsQuery = z.infer<typeof listAuditLogsQuerySchema>
+export type TestEmailInput = z.infer<typeof testEmailSchema>
+export type TestSmsInput = z.infer<typeof testSmsSchema>

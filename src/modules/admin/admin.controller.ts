@@ -1,4 +1,7 @@
 import type { Request, Response } from 'express'
+import { sendEmail } from '../../lib/email'
+import { sendSms } from '../../lib/sms'
+
 import { catchAsync } from '../../shared/catchAsync'
 import { sendResponse } from '../../shared/sendResponse'
 import {
@@ -16,6 +19,8 @@ import type {
   ListFeedbackQuery,
   ListUsersQuery,
   ReportSummaryQuery,
+  TestEmailInput,
+  TestSmsInput,
   UpdateUserRoleInput,
 } from './admin.validation'
 
@@ -52,4 +57,30 @@ export const getReport = catchAsync(async (req: Request, res: Response) => {
 export const getFeedback = catchAsync(async (req: Request, res: Response) => {
   const result = await listAllFeedback(req.validatedQuery as unknown as ListFeedbackQuery)
   sendResponse(res, { message: 'Feedback fetched', data: result })
+})
+
+export const postTestEmail = catchAsync(async (req: Request, res: Response) => {
+  const { to } = req.body as TestEmailInput
+  const result = await sendEmail({
+    to,
+    subject: 'RapidAid Integration Test',
+    html: '<p>This is a test email from RapidAid to verify your Resend integration settings.</p>',
+    text: 'This is a test email from RapidAid to verify your Resend integration settings.',
+  })
+  sendResponse(res, {
+    message: result.sent ? 'Test email sent successfully' : 'Test email dispatch completed',
+    data: result,
+  })
+})
+
+export const postTestSms = catchAsync(async (req: Request, res: Response) => {
+  const { to } = req.body as TestSmsInput
+  const result = await sendSms({
+    to,
+    text: 'RapidAid test message: Your SMS integration is working.',
+  })
+  sendResponse(res, {
+    message: result.sent ? 'Test SMS sent successfully' : 'Test SMS dispatch completed',
+    data: result,
+  })
 })
