@@ -212,3 +212,16 @@ Push to the connected GitHub branch and Vercel rebuilds and redeploys automatica
 ## Cost check
 
 Neon free tier, Vercel hobby, Stripe test mode, Google OAuth in testing mode. Nothing here needs a card or a paid plan at any point.
+
+## Deploying updates (read this before pushing)
+
+`vercel.json` uses the legacy `builds` setting with `src: dist/server.js`. `dist/` is git-ignored and `buildCommand` is ignored when `builds` is set, so a deployment that Vercel triggers from a git push builds nothing ("Build output contains no functions") and is never aliased. Deploy from your machine instead:
+
+```bash
+bun run build
+vercel --prod --yes
+# the custom domain is pinned by hand, move it to the new deployment:
+vercel alias set <new-deployment-url> emergency-ambulance-dispatch-api.vercel.app
+```
+
+Then check `curl https://emergency-ambulance-dispatch-api.vercel.app/api/v1/public/stats`. If you want push-to-deploy, replace the `builds` block with a function that Vercel compiles from `src/server.ts` and verify it on a preview deployment first.
