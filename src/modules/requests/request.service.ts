@@ -27,7 +27,16 @@ const DETAIL_INCLUDE = {
   patient: { select: { id: true, name: true, email: true, phone: true } },
   driver: { select: { id: true, name: true, email: true, phone: true } },
   ambulance: { select: { id: true, plateNumber: true, type: true, status: true } },
-  destinationHospital: { select: { id: true, name: true, address: true, phone: true } },
+  destinationHospital: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      lat: true,
+      lng: true,
+      phone: true,
+    },
+  },
   statusLogs: {
     orderBy: { createdAt: 'asc' as const },
     select: {
@@ -54,7 +63,16 @@ const LIST_SELECT = {
   assignedAt: true,
   completedAt: true,
   ambulance: { select: { id: true, plateNumber: true, type: true } },
-  destinationHospital: { select: { id: true, name: true } },
+  destinationHospital: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      lat: true,
+      lng: true,
+      phone: true,
+    },
+  },
 } satisfies Prisma.EmergencyRequestSelect
 
 async function loadDetail(id: string): Promise<RequestDetail> {

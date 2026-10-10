@@ -357,4 +357,34 @@ describe('status transitions: state machine and audit', () => {
       .expect(200)
     expect(res.body.data.meta.total).toBe(2)
   })
+
+  it('returns destinationHospital with address, lat, lng and phone on request detail', async () => {
+    const { patient, hospital } = await setupDispatchFixture()
+    const resCreate = await request(app)
+      .post('/api/v1/requests')
+      .set('Authorization', `Bearer ${patient.token}`)
+      .send({
+        pickupAddress: 'House 42, Road 11, Banani',
+        pickupLat: 23.7936,
+        pickupLng: 90.4043,
+        priority: 'HIGH',
+        destinationHospitalId: hospital.id,
+      })
+      .expect(201)
+
+    const requestId = resCreate.body.data.request.id
+    const res = await request(app)
+      .get(`/api/v1/requests/${requestId}`)
+      .set('Authorization', `Bearer ${patient.token}`)
+      .expect(200)
+
+    const hosp = res.body.data.request.destinationHospital
+    expect(hosp).toBeDefined()
+    expect(hosp.id).toBe(hospital.id)
+    expect(hosp.name).toBe(hospital.name)
+    expect(hosp.address).toBe(hospital.address)
+    expect(typeof hosp.lat).toBe('number')
+    expect(typeof hosp.lng).toBe('number')
+    expect(hosp.phone).toBe(hospital.phone)
+  })
 })
