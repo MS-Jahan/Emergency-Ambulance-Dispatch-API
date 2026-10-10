@@ -236,6 +236,53 @@ paths:
           description: Password updated successfully
         '400':
           description: Invalid password or google account
+  /api/v1/auth/forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: Forgot password
+      description: Generates a 30-minute password reset link and sends email if configured. Always returns 200.
+      security:
+        - noauthAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Generic reset link response
+  /api/v1/auth/reset-password:
+    post:
+      tags:
+        - Auth
+      summary: Reset password
+      description: Consumes a reset token, updates password, and revokes all refresh tokens.
+      security:
+        - noauthAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password reset successfully
+        '400':
+          description: Invalid or expired token
+
   /api/v1/hospitals:
     get:
       tags:
@@ -1099,6 +1146,20 @@ paths:
           description: Successful response
           content:
             application/json: {}
+  /api/v1/public/capabilities:
+    get:
+      tags:
+        - Public
+      summary: Integration capabilities
+      description: No auth. Checks whether email, sms, and password reset are configured. Cached for 60 seconds.
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Capabilities fetched
+          content:
+            application/json: {}
+
   /api/v1/driver/me/stats:
     get:
       tags:
@@ -1254,6 +1315,41 @@ paths:
       responses:
         '200':
           description: Status updated
+  /api/v1/admin/integrations/test-email:
+    post:
+      tags:
+        - Admin
+      summary: Test email integration
+      description: Admin only. Dispatches a test email via Resend to verify configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties:
+                to: { type: string, format: email }
+      responses:
+        '200':
+          description: Test email dispatched
+  /api/v1/admin/integrations/test-sms:
+    post:
+      tags:
+        - Admin
+      summary: Test SMS integration
+      description: Admin only. Dispatches a test SMS via Twilio or webhook to verify configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties:
+                to: { type: string }
+      responses:
+        '200':
+          description: Test SMS dispatched
+
   /api/v1/fares/estimate:
     get:
       tags:

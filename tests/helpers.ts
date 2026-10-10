@@ -9,6 +9,7 @@ export const app = createApp()
 export { prisma }
 
 const TABLES = [
+  'PasswordResetToken',
   'ContactMessage',
   'RequestStatusLog',
   'Feedback',
