@@ -84,11 +84,15 @@ describe('contact form and admin messages', () => {
   })
 
   it('rate limits submissions: returns 429 on the sixth call from the same IP', async () => {
+    const signed = (ip: string) => ({
+      'x-client-ip': ip,
+      'x-proxy-secret': process.env.PROXY_SHARED_SECRET as string,
+    })
     const testIp = '10.99.99.99'
     for (let i = 0; i < 5; i++) {
       await request(app)
         .post('/api/v1/contact')
-        .set('x-forwarded-for', testIp)
+        .set(signed(testIp))
         .send({
           name: `Sender ${i}`,
           email: `sender${i}@example.com`,
@@ -99,7 +103,7 @@ describe('contact form and admin messages', () => {
 
     const sixth = await request(app)
       .post('/api/v1/contact')
-      .set('x-forwarded-for', testIp)
+      .set(signed(testIp))
       .send({
         name: 'Sender 6',
         email: 'sender6@example.com',
@@ -108,6 +112,17 @@ describe('contact form and admin messages', () => {
       .expect(429)
 
     expect(sixth.body.success).toBe(false)
+
+    // a different visitor behind the same frontend still gets through
+    await request(app)
+      .post('/api/v1/contact')
+      .set(signed('10.99.99.100'))
+      .send({
+        name: 'Other Visitor',
+        email: 'other@example.com',
+        message: 'A different visitor must not share the same bucket.',
+      })
+      .expect(201)
     expect(sixth.body.message).toContain('Too many requests')
   })
 
