@@ -24,6 +24,7 @@ const PAYMENT_SELECT = {
       pickupAddress: true,
       patient: { select: { id: true, name: true, email: true } },
       ambulance: { select: { id: true, plateNumber: true, type: true } },
+      destinationHospital: { select: { id: true, name: true, address: true } },
     },
   },
 } satisfies Prisma.PaymentSelect
