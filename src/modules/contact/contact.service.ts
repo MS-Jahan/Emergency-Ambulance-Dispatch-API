@@ -1,4 +1,8 @@
 import type { ContactStatus, Prisma } from '@prisma/client'
+import { env } from '../../config/env'
+import { isEmailConfigured, sendEmail } from '../../lib/email'
+import { adminContactEmail } from '../../lib/emailTemplates'
+import { logger } from '../../lib/logger'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../shared/AppError'
 import { buildMeta } from '../../shared/paginate'
@@ -21,6 +25,29 @@ export async function createContactMessage(input: CreateContactMessageInput) {
     },
     select: { id: true },
   })
+
+  if (env.ADMIN_NOTIFY_EMAIL && isEmailConfigured()) {
+    try {
+      const emailContent = adminContactEmail({
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        category: input.category,
+        message: input.message,
+      })
+      await sendEmail({
+        to: env.ADMIN_NOTIFY_EMAIL,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text,
+      })
+    } catch (err) {
+      logger.error(
+        { err, messageId: message.id },
+        'Failed to send admin contact email notification',
+      )
+    }
+  }
 
   return message
 }

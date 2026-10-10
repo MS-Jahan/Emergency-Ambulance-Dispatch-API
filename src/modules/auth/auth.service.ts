@@ -7,6 +7,7 @@ import { isEmailConfigured, sendEmail } from '../../lib/email'
 import { passwordResetEmail } from '../../lib/emailTemplates'
 import { logger } from '../../lib/logger'
 import { prisma } from '../../lib/prisma'
+import { normalizePhone } from '../../lib/sms'
 import {
   hashToken,
   refreshExpiry,
@@ -22,6 +23,7 @@ import type {
   RefreshTokenInput,
   RegisterInput,
   ResetPasswordInput,
+  UpdateProfileInput,
 } from './auth.validation'
 
 const PUBLIC_USER_SELECT = {
@@ -31,11 +33,24 @@ const PUBLIC_USER_SELECT = {
   phone: true,
   role: true,
   isVerified: true,
+  notifySms: true,
+  notifyEmail: true,
   createdAt: true,
 } as const
 
 export interface AuthResult {
-  user: Pick<User, 'id' | 'name' | 'email' | 'phone' | 'role' | 'isVerified' | 'createdAt'>
+  user: Pick<
+    User,
+    | 'id'
+    | 'name'
+    | 'email'
+    | 'phone'
+    | 'role'
+    | 'isVerified'
+    | 'notifySms'
+    | 'notifyEmail'
+    | 'createdAt'
+  >
   accessToken: string
   refreshToken: string
 }
@@ -209,8 +224,25 @@ export async function revokeRefreshToken(refreshToken: string | undefined): Prom
 
 export async function updateProfile(
   userId: string,
-  input: { name?: string; phone?: string },
+  input: UpdateProfileInput,
 ): Promise<AuthResult['user']> {
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { phone: true, notifySms: true },
+  })
+  if (!existing) {
+    throw AppError.notFound('User not found')
+  }
+
+  const effectivePhone = input.phone !== undefined ? input.phone : existing.phone
+  const effectiveNotifySms = input.notifySms !== undefined ? input.notifySms : existing.notifySms
+
+  if (effectiveNotifySms) {
+    if (!effectivePhone || !normalizePhone(effectivePhone)) {
+      throw AppError.badRequest('A valid phone number is required to enable SMS notifications')
+    }
+  }
+
   return prisma.user.update({
     where: { id: userId },
     data: input,

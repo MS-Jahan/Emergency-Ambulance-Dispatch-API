@@ -64,9 +64,12 @@ export const getMe = catchAsync(async (req: Request, res: Response) => {
       phone: true,
       role: true,
       isVerified: true,
+      notifySms: true,
+      notifyEmail: true,
       createdAt: true,
     },
   })
+
   sendResponse(res, { message: 'Profile fetched', data: { user } })
 })
 

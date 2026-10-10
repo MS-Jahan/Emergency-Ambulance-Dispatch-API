@@ -28,6 +28,8 @@ export const refreshTokenSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   phone: z.string().min(6).max(20).optional(),
+  notifySms: z.boolean().optional(),
+  notifyEmail: z.boolean().optional(),
 })
 
 export const changePasswordSchema = z.object({

@@ -1,6 +1,9 @@
 import type { Prisma, RequestStatus } from '@prisma/client'
+import { logger } from '../../lib/logger'
+import { notifyRequestEvent } from '../../lib/notify'
 import { prisma } from '../../lib/prisma'
 import type { AuthUser } from '../../middleware/auth'
+
 import { AppError } from '../../shared/AppError'
 import { buildMeta } from '../../shared/paginate'
 import type {
@@ -208,8 +211,9 @@ export async function getRequest(id: string, requester: AuthUser) {
 }
 
 export async function assignRequest(requestId: string, adminId: string, input: AssignRequestInput) {
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const request = await tx.emergencyRequest.findFirst({ where: { id: requestId } })
+
     if (!request) {
       throw AppError.notFound('Emergency request not found')
     }
@@ -276,6 +280,14 @@ export async function assignRequest(requestId: string, adminId: string, input: A
 
     return updated
   })
+
+  try {
+    await notifyRequestEvent(requestId, 'ASSIGNED')
+  } catch (err) {
+    logger.error({ requestId, err }, 'Failed to dispatch ASSIGNED notification')
+  }
+
+  return updated
 }
 
 export async function transitionStatus(
@@ -283,7 +295,7 @@ export async function transitionStatus(
   actor: AuthUser,
   input: UpdateStatusInput,
 ) {
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const request = await tx.emergencyRequest.findFirst({ where: { id: requestId } })
     if (!request) {
       throw AppError.notFound('Emergency request not found')
@@ -338,10 +350,20 @@ export async function transitionStatus(
 
     return updated
   })
+
+  if (input.status === 'PICKED_UP' || input.status === 'COMPLETED') {
+    try {
+      await notifyRequestEvent(requestId, input.status)
+    } catch (err) {
+      logger.error({ requestId, status: input.status, err }, 'Failed to dispatch notification')
+    }
+  }
+
+  return updated
 }
 
 export async function cancelRequest(requestId: string, actor: AuthUser, input: CancelRequestInput) {
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const request = await tx.emergencyRequest.findFirst({ where: { id: requestId } })
     if (!request) {
       throw AppError.notFound('Emergency request not found')
@@ -388,6 +410,14 @@ export async function cancelRequest(requestId: string, actor: AuthUser, input: C
 
     return updated
   })
+
+  try {
+    await notifyRequestEvent(requestId, 'CANCELLED')
+  } catch (err) {
+    logger.error({ requestId, err }, 'Failed to dispatch CANCELLED notification')
+  }
+
+  return updated
 }
 
 const MY_ASSIGNED_SELECT = {
