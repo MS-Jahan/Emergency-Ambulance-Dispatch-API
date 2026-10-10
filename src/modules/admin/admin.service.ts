@@ -3,10 +3,13 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../shared/AppError'
 import { buildMeta } from '../../shared/paginate'
+import { buildSummary, resolveRange } from './admin.reports'
 import type {
   CreateDriverInput,
   ListAuditLogsQuery,
+  ListFeedbackQuery,
   ListUsersQuery,
+  ReportSummaryQuery,
   UpdateUserRoleInput,
 } from './admin.validation'
 
@@ -171,6 +174,61 @@ export async function listAuditLogs(query: ListAuditLogsQuery) {
       },
     }),
     prisma.requestStatusLog.count({ where }),
+  ])
+
+  return { items, meta: buildMeta(page, limit, total) }
+}
+
+const DAY_MS = 86_400_000
+
+export async function getReportSummary(query: ReportSummaryQuery) {
+  const { start, days } = resolveRange(query.from, query.to)
+  const end = new Date(start.getTime() + days * DAY_MS)
+
+  const rows = await prisma.emergencyRequest.findMany({
+    where: { requestedAt: { gte: start, lt: end } },
+    select: {
+      requestedAt: true,
+      assignedAt: true,
+      priority: true,
+      cancelReason: true,
+      ambulance: { select: { type: true } },
+    },
+  })
+
+  return buildSummary(
+    rows.map((r) => ({
+      requestedAt: r.requestedAt,
+      assignedAt: r.assignedAt,
+      priority: r.priority,
+      cancelReason: r.cancelReason,
+      ambulanceType: r.ambulance?.type ?? null,
+    })),
+    start,
+    days,
+  )
+}
+
+export async function listAllFeedback(query: ListFeedbackQuery) {
+  const { page, limit } = query
+  const where: Prisma.FeedbackWhereInput = { deletedAt: null }
+
+  const [items, total] = await prisma.$transaction([
+    prisma.feedback.findMany({
+      where,
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        requestId: true,
+        driver: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.feedback.count({ where }),
   ])
 
   return { items, meta: buildMeta(page, limit, total) }

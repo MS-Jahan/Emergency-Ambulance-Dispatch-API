@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { paginationQuerySchema } from '../../shared/paginate'
+import { MAX_REPORT_DAYS, resolveRange } from './admin.reports'
 
 export const createDriverSchema = z.object({
   name: z.string().min(2).max(80),
@@ -27,6 +28,28 @@ export const listAuditLogsQuerySchema = paginationQuerySchema.extend({
   requestId: z.string().cuid().optional(),
 })
 
+export const reportSummaryQuerySchema = z
+  .object({
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
+  })
+  .superRefine((q, ctx) => {
+    const { start, end, days } = resolveRange(q.from, q.to)
+    if (end < start) {
+      ctx.addIssue({ code: 'custom', path: ['to'], message: '"to" must not be before "from"' })
+    } else if (days > MAX_REPORT_DAYS) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['from'],
+        message: `Date range cannot exceed ${MAX_REPORT_DAYS} days`,
+      })
+    }
+  })
+
+export const listFeedbackQuerySchema = paginationQuerySchema
+
+export type ReportSummaryQuery = z.infer<typeof reportSummaryQuerySchema>
+export type ListFeedbackQuery = z.infer<typeof listFeedbackQuerySchema>
 export type CreateDriverInput = z.infer<typeof createDriverSchema>
 export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>

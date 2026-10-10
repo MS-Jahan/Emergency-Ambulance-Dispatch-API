@@ -1,12 +1,22 @@
 import { Router } from 'express'
 import { authenticate, requireRole } from '../../middleware/auth'
 import { validate } from '../../middleware/validate'
-import { getAuditLogs, getStats, getUsers, patchUserRole, postDriver } from './admin.controller'
+import {
+  getAuditLogs,
+  getFeedback,
+  getReport,
+  getStats,
+  getUsers,
+  patchUserRole,
+  postDriver,
+} from './admin.controller'
 import { idParamSchema } from './admin.params'
 import {
   createDriverSchema,
   listAuditLogsQuerySchema,
+  listFeedbackQuerySchema,
   listUsersQuerySchema,
+  reportSummaryQuerySchema,
   updateUserRoleSchema,
 } from './admin.validation'
 
@@ -23,3 +33,5 @@ adminRouter.patch(
 )
 adminRouter.get('/dashboard-stats', getStats)
 adminRouter.get('/audit-logs', validate({ query: listAuditLogsQuerySchema }), getAuditLogs)
+adminRouter.get('/reports/summary', validate({ query: reportSummaryQuerySchema }), getReport)
+adminRouter.get('/feedback', validate({ query: listFeedbackQuerySchema }), getFeedback)

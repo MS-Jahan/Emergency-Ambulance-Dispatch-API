@@ -4,6 +4,8 @@ import { sendResponse } from '../../shared/sendResponse'
 import {
   createDriver,
   getDashboardStats,
+  getReportSummary,
+  listAllFeedback,
   listAuditLogs,
   listUsers,
   updateUserRole,
@@ -11,7 +13,9 @@ import {
 import type {
   CreateDriverInput,
   ListAuditLogsQuery,
+  ListFeedbackQuery,
   ListUsersQuery,
+  ReportSummaryQuery,
   UpdateUserRoleInput,
 } from './admin.validation'
 
@@ -38,4 +42,14 @@ export const getStats = catchAsync(async (_req: Request, res: Response) => {
 export const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
   const result = await listAuditLogs(req.validatedQuery as unknown as ListAuditLogsQuery)
   sendResponse(res, { message: 'Audit logs fetched', data: result })
+})
+
+export const getReport = catchAsync(async (req: Request, res: Response) => {
+  const summary = await getReportSummary(req.validatedQuery as unknown as ReportSummaryQuery)
+  sendResponse(res, { message: 'Report summary fetched', data: { summary } })
+})
+
+export const getFeedback = catchAsync(async (req: Request, res: Response) => {
+  const result = await listAllFeedback(req.validatedQuery as unknown as ListFeedbackQuery)
+  sendResponse(res, { message: 'Feedback fetched', data: result })
 })
