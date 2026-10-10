@@ -28,14 +28,15 @@ Node.js 20+, TypeScript, Express 5, PostgreSQL, Prisma ORM, Zod, Stripe, pino, a
 
 ## Demo
 
-Once running, the demo admin account is:
+Once seeded (`bun run db:seed`), these demo accounts exist, one per role:
 
-```
-email:    admin@dispatch.demo
-password: Admin123!
-```
+| Role | Email | Password |
+|---|---|---|
+| ADMIN | `admin@dispatch.demo` | `Admin123!` |
+| PATIENT | `patient@dispatch.demo` | `Demo123!` |
+| DRIVER | `driver@dispatch.demo` | `Demo123!` |
 
-The seed also creates three hospitals and three ambulances. Create patient and driver accounts through the API to try those roles. Driver accounts are created by an admin through `POST /api/v1/admin/drivers`, or by promoting an existing user through `PATCH /api/v1/admin/users/:id/role`.
+The driver is linked to a driver profile and an ambulance. The seed also creates three hospitals and three ambulances. The web frontend (https://emergency-ambulance-dispatch-fronte.vercel.app) has one-click buttons for all three roles. More drivers are created by an admin through `POST /api/v1/admin/drivers`, or by promoting an existing user through `PATCH /api/v1/admin/users/:id/role`. The `DEMO_ADMIN_EMAIL`, `DEMO_ADMIN_PASSWORD` and `DEMO_USER_PASSWORD` variables override the defaults when seeding.
 
 ## API documentation
 
