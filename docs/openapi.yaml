@@ -1143,6 +1143,70 @@ paths:
           description: Successful response
           content:
             application/json: {}
+  /api/v1/contact:
+    post:
+      tags:
+        - Contact
+      summary: Submit contact message
+      description: Public contact form submission with honeypot and rate limiting.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, message]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                phone: { type: string }
+                category: { type: string, enum: [GENERAL, BILLING, DRIVER, HOSPITAL, FEEDBACK] }
+                message: { type: string }
+                website: { type: string }
+      responses:
+        '201':
+          description: Message received
+  /api/v1/admin/contact-messages:
+    get:
+      tags:
+        - Admin
+      summary: List contact messages
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [NEW, READ, RESOLVED] }
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Successful response
+  /api/v1/admin/contact-messages/{id}:
+    patch:
+      tags:
+        - Admin
+      summary: Update contact message status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [NEW, READ, RESOLVED] }
+      responses:
+        '200':
+          description: Status updated
   /api/v1/health:
     get:
       tags:

@@ -27,3 +27,13 @@ export const authLimiter = rateLimit({
   skip: skipInTests,
   message: rateLimitBody,
 })
+
+export const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1',
+  validate: { keyGeneratorIpFallback: false, xForwardedForHeader: false },
+  message: rateLimitBody,
+})

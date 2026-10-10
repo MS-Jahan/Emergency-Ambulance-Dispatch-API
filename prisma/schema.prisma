@@ -56,6 +56,20 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum ContactCategory {
+  GENERAL
+  BILLING
+  DRIVER
+  HOSPITAL
+  FEEDBACK
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  RESOLVED
+}
+
 model User {
   id         String    @id @default(cuid())
   name       String
@@ -222,4 +236,17 @@ model RefreshToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+model ContactMessage {
+  id        String          @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  category  ContactCategory @default(GENERAL)
+  message   String
+  status    ContactStatus   @default(NEW)
+  createdAt DateTime        @default(now())
+
+  @@index([status, createdAt])
 }

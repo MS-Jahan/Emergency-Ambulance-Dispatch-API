@@ -1,6 +1,11 @@
 import { Router } from 'express'
 import { authenticate, requireRole } from '../../middleware/auth'
 import { validate } from '../../middleware/validate'
+import { getContactMessages, patchContactMessageStatus } from '../contact/contact.controller'
+import {
+  listContactMessagesQuerySchema,
+  updateContactMessageStatusSchema,
+} from '../contact/contact.validation'
 import {
   getAuditLogs,
   getFeedback,
@@ -35,3 +40,13 @@ adminRouter.get('/dashboard-stats', getStats)
 adminRouter.get('/audit-logs', validate({ query: listAuditLogsQuerySchema }), getAuditLogs)
 adminRouter.get('/reports/summary', validate({ query: reportSummaryQuerySchema }), getReport)
 adminRouter.get('/feedback', validate({ query: listFeedbackQuerySchema }), getFeedback)
+adminRouter.get(
+  '/contact-messages',
+  validate({ query: listContactMessagesQuerySchema }),
+  getContactMessages,
+)
+adminRouter.patch(
+  '/contact-messages/:id',
+  validate({ params: idParamSchema, body: updateContactMessageStatusSchema }),
+  patchContactMessageStatus,
+)
