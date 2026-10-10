@@ -8,16 +8,20 @@ import {
   googleLogin,
   loginUser,
   registerUser,
+  requestPasswordReset,
+  resetPasswordWithToken,
   revokeRefreshToken,
   rotateRefreshToken,
   updateProfile,
 } from './auth.service'
 import type {
   ChangePasswordInput,
+  ForgotPasswordInput,
   GoogleLoginInput,
   LoginInput,
   RefreshTokenInput,
   RegisterInput,
+  ResetPasswordInput,
   UpdateProfileInput,
 } from './auth.validation'
 
@@ -80,4 +84,18 @@ export const changeMyPassword = catchAsync(async (req: Request, res: Response) =
   }
   await changePassword(req.user.id, req.body as ChangePasswordInput)
   sendResponse(res, { message: 'Password updated successfully', data: null })
+})
+
+export const forgotPassword = catchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body as ForgotPasswordInput
+  await requestPasswordReset(email)
+  sendResponse(res, {
+    message: 'If an account exists for that address, a reset link has been sent',
+    data: null,
+  })
+})
+
+export const resetPassword = catchAsync(async (req: Request, res: Response) => {
+  await resetPasswordWithToken(req.body as ResetPasswordInput)
+  sendResponse(res, { message: 'Password has been reset successfully', data: null })
 })

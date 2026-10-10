@@ -90,6 +90,7 @@ model User {
   feedbackGiven     Feedback[]         @relation("feedbackPatient")
   feedbackReceived  Feedback[]         @relation("feedbackDriver")
   refreshTokens     RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   assignedRequests  EmergencyRequest[] @relation("driverRequests")
 
   @@index([role])
@@ -250,3 +251,16 @@ model ContactMessage {
 
   @@index([status, createdAt])
 }
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+

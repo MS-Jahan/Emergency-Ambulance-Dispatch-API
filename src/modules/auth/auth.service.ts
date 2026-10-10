@@ -1,7 +1,11 @@
+import crypto from 'node:crypto'
 import { Role, type User } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { OAuth2Client } from 'google-auth-library'
 import { env } from '../../config/env'
+import { isEmailConfigured, sendEmail } from '../../lib/email'
+import { passwordResetEmail } from '../../lib/emailTemplates'
+import { logger } from '../../lib/logger'
 import { prisma } from '../../lib/prisma'
 import {
   hashToken,
@@ -12,10 +16,12 @@ import {
 } from '../../lib/tokens'
 import { AppError } from '../../shared/AppError'
 import type {
+  ForgotPasswordInput,
   GoogleLoginInput,
   LoginInput,
   RefreshTokenInput,
   RegisterInput,
+  ResetPasswordInput,
 } from './auth.validation'
 
 const PUBLIC_USER_SELECT = {
@@ -242,6 +248,85 @@ export async function changePassword(
     prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
+    }),
+  ])
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  if (!isEmailConfigured()) {
+    logger.warn({ email }, 'Password reset requested but email service is not configured')
+    return
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { email: email.toLowerCase().trim(), deletedAt: null },
+    select: { id: true, name: true, email: true, password: true },
+  })
+
+  if (!user || !user.password) {
+    return
+  }
+
+  const rawToken = crypto.randomBytes(32).toString('hex')
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000)
+
+  await prisma.$transaction([
+    prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    }),
+    prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    }),
+  ])
+
+  const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}`
+  const { subject, html, text } = passwordResetEmail({ resetUrl, userName: user.name })
+  await sendEmail({
+    to: user.email,
+    subject,
+    html,
+    text,
+  })
+}
+
+export async function resetPasswordWithToken(input: ResetPasswordInput): Promise<void> {
+  const tokenHash = crypto.createHash('sha256').update(input.token.trim()).digest('hex')
+
+  const resetRecord = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash },
+    include: { user: true },
+  })
+
+  if (
+    !resetRecord ||
+    resetRecord.usedAt ||
+    resetRecord.expiresAt < new Date() ||
+    resetRecord.user.deletedAt
+  ) {
+    throw AppError.badRequest('Invalid or expired token')
+  }
+
+  const newHash = await bcrypt.hash(input.newPassword, 10)
+  const now = new Date()
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: resetRecord.userId },
+      data: { password: newHash },
+    }),
+    prisma.passwordResetToken.update({
+      where: { id: resetRecord.id },
+      data: { usedAt: now },
+    }),
+    prisma.refreshToken.updateMany({
+      where: { userId: resetRecord.userId, revokedAt: null },
+      data: { revokedAt: now },
     }),
   ])
 }
