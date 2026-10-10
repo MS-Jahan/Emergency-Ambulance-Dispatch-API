@@ -6,6 +6,7 @@ import { env } from '../../config/env'
 import { isEmailConfigured, sendEmail } from '../../lib/email'
 import { passwordResetEmail } from '../../lib/emailTemplates'
 import { logger } from '../../lib/logger'
+import { maskEmail } from '../../lib/mask'
 import { prisma } from '../../lib/prisma'
 import { normalizePhone } from '../../lib/sms'
 import {
@@ -286,7 +287,10 @@ export async function changePassword(
 
 export async function requestPasswordReset(email: string): Promise<void> {
   if (!isEmailConfigured()) {
-    logger.warn({ email }, 'Password reset requested but email service is not configured')
+    logger.warn(
+      { email: maskEmail(email) },
+      'Password reset requested but email service is not configured',
+    )
     return
   }
 

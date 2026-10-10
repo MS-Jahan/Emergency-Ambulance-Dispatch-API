@@ -1,5 +1,6 @@
 import { env } from '../config/env'
 import { logger } from './logger'
+import { maskPhone } from './mask'
 
 export interface SendSmsOptions {
   to: string
@@ -66,7 +67,7 @@ export function isSmsConfigured(): boolean {
 
 export async function sendSms({ to, text }: SendSmsOptions): Promise<SendSmsResult> {
   if (!isSmsConfigured()) {
-    logger.warn({ to }, 'SMS not configured, skipping send')
+    logger.warn({ to: maskPhone(to) }, 'SMS not configured, skipping send')
     return { sent: false, skipped: 'not_configured' }
   }
 
@@ -104,7 +105,7 @@ export async function sendSms({ to, text }: SendSmsOptions): Promise<SendSmsResu
       if (!res.ok) {
         const errText = await res.text().catch(() => '')
         logger.error(
-          { status: res.status, to: targetPhone },
+          { status: res.status, to: maskPhone(targetPhone) },
           `Twilio API returned error status ${res.status}`,
         )
         return { sent: false, error: `Twilio error: HTTP ${res.status} ${errText}`.trim() }
@@ -137,7 +138,7 @@ export async function sendSms({ to, text }: SendSmsOptions): Promise<SendSmsResu
       if (!res.ok) {
         const errText = await res.text().catch(() => '')
         logger.error(
-          { status: res.status, to: targetPhone },
+          { status: res.status, to: maskPhone(targetPhone) },
           `SMS Webhook returned error status ${res.status}`,
         )
         return { sent: false, error: `Webhook error: HTTP ${res.status} ${errText}`.trim() }
@@ -149,7 +150,7 @@ export async function sendSms({ to, text }: SendSmsOptions): Promise<SendSmsResu
     return { sent: false, skipped: 'not_configured' }
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err)
-    logger.error({ to: targetPhone, error: errorMessage }, 'Failed to send SMS')
+    logger.error({ to: maskPhone(targetPhone), error: errorMessage }, 'Failed to send SMS')
     return { sent: false, error: errorMessage }
   }
 }

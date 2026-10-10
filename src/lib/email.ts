@@ -1,5 +1,6 @@
 import { env } from '../config/env'
 import { logger } from './logger'
+import { maskEmail } from './mask'
 
 export interface SendEmailOptions {
   to: string
@@ -31,7 +32,7 @@ export async function sendEmail({
 }: SendEmailOptions): Promise<SendEmailResult> {
   if (!isEmailConfigured()) {
     logger.warn(
-      { to, subject },
+      { to: maskEmail(to), subject },
       'Email not configured (RESEND_API_KEY or EMAIL_FROM missing), skipping send',
     )
     return { sent: false, skipped: 'not_configured' }
@@ -57,7 +58,7 @@ export async function sendEmail({
     if (!res.ok) {
       const errText = await res.text().catch(() => '')
       logger.error(
-        { status: res.status, to, subject },
+        { status: res.status, to: maskEmail(to), subject },
         `Resend API returned error status ${res.status}`,
       )
       return { sent: false, error: `Resend error: HTTP ${res.status} ${errText}`.trim() }
@@ -66,7 +67,10 @@ export async function sendEmail({
     return { sent: true }
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err)
-    logger.error({ to, subject, error: errorMessage }, 'Failed to send email via Resend')
+    logger.error(
+      { to: maskEmail(to), subject, error: errorMessage },
+      'Failed to send email via Resend',
+    )
     return { sent: false, error: errorMessage }
   }
 }

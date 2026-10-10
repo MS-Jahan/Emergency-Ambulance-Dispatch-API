@@ -1,6 +1,6 @@
 import { env } from '../config/env'
 import { isEmailConfigured, sendEmail } from './email'
-import { tripCompletedEmail } from './emailTemplates'
+import { escapeHtml, tripCompletedEmail } from './emailTemplates'
 import { logger } from './logger'
 import { prisma } from './prisma'
 import { isSmsConfigured, sendSms } from './sms'
@@ -66,7 +66,7 @@ async function performNotifyRequestEvent(
       smsText = `RapidAid: An ambulance has been assigned to your request (${requestId}). The driver is en route.`
       emailData = {
         subject: 'Ambulance Assigned - RapidAid',
-        html: `<p>Hello ${patient.name || 'there'},</p><p>An ambulance has been assigned to your request (<code>${requestId}</code>). The driver is on the way.</p>`,
+        html: `<p>Hello ${escapeHtml(patient.name || 'there')},</p><p>An ambulance has been assigned to your request (<code>${requestId}</code>). The driver is on the way.</p>`,
         text: `Hello ${patient.name || 'there'},\n\nAn ambulance has been assigned to your request (${requestId}). The driver is on the way.\n\nRapidAid Emergency Ambulance Dispatch`,
       }
       break
@@ -75,7 +75,7 @@ async function performNotifyRequestEvent(
       smsText = 'RapidAid: Patient picked up. Ambulance is en route to hospital.'
       emailData = {
         subject: 'Ambulance Picked Up - RapidAid',
-        html: `<p>Hello ${patient.name || 'there'},</p><p>You have been picked up. The ambulance is en route to the hospital.</p>`,
+        html: `<p>Hello ${escapeHtml(patient.name || 'there')},</p><p>You have been picked up. The ambulance is en route to the hospital.</p>`,
         text: `Hello ${patient.name || 'there'},\n\nYou have been picked up. The ambulance is en route to the hospital.\n\nRapidAid Emergency Ambulance Dispatch`,
       }
       break
@@ -102,7 +102,7 @@ async function performNotifyRequestEvent(
       smsText = `RapidAid: Your ambulance request (${requestId}) has been cancelled.`
       emailData = {
         subject: 'Ambulance Request Cancelled - RapidAid',
-        html: `<p>Hello ${patient.name || 'there'},</p><p>Your ambulance request (<code>${requestId}</code>) has been cancelled.</p>`,
+        html: `<p>Hello ${escapeHtml(patient.name || 'there')},</p><p>Your ambulance request (<code>${requestId}</code>) has been cancelled.</p>`,
         text: `Hello ${patient.name || 'there'},\n\nYour ambulance request (${requestId}) has been cancelled.\n\nRapidAid Emergency Ambulance Dispatch`,
       }
       break
