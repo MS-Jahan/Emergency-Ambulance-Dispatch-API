@@ -57,6 +57,32 @@ async function main() {
     },
   })
 
+  const demoPassword = process.env.DEMO_USER_PASSWORD ?? 'Demo123!'
+  await prisma.user.upsert({
+    where: { email: 'patient@dispatch.demo' },
+    update: {},
+    create: {
+      name: 'Demo Patient',
+      email: 'patient@dispatch.demo',
+      password: await bcrypt.hash(demoPassword, 10),
+      phone: '+8801700000001',
+      role: Role.PATIENT,
+      isVerified: true,
+    },
+  })
+  const driverUser = await prisma.user.upsert({
+    where: { email: 'driver@dispatch.demo' },
+    update: {},
+    create: {
+      name: 'Demo Driver',
+      email: 'driver@dispatch.demo',
+      password: await bcrypt.hash(demoPassword, 10),
+      phone: '+8801700000002',
+      role: Role.DRIVER,
+      isVerified: true,
+    },
+  })
+
   for (const [i, h] of hospitals.entries()) {
     const existing = await prisma.hospital.findFirst({ where: { name: h.name, deletedAt: null } })
     const hospital = existing ?? (await prisma.hospital.create({ data: h }))
@@ -69,6 +95,20 @@ async function main() {
       })
     }
   }
+
+  const firstAmbulance = await prisma.ambulance.findUnique({ where: { plateNumber: 'DHK-1001' } })
+  await prisma.driverProfile.upsert({
+    where: { userId: driverUser.id },
+    update: {},
+    create: {
+      userId: driverUser.id,
+      licenseNumber: 'DEMO-LIC-0001',
+      status: 'AVAILABLE',
+      currentLat: 23.7259,
+      currentLng: 90.3973,
+      ambulanceId: firstAmbulance?.id,
+    },
+  })
 
   logger.info(`Seed done. Admin: ${admin.email}`)
 }
