@@ -118,6 +118,17 @@ See `.env.example` for the full list. The important ones:
 | `APP_BASE_URL` | Public base url of the API, used to build Stripe callback urls |
 | `CORS_ORIGIN` | Comma separated list of allowed origins |
 | `FRONTEND_URL` | Public base url of the web frontend; Stripe sends the payer back to `/payment/success` and `/payment/cancel` here |
+| `RESEND_API_KEY` | Optional: Resend API key for transactional emails (`re_...`) |
+| `EMAIL_FROM` | Optional: Sender address for emails, e.g. `RapidAid <no-reply@example.com>` |
+| `ADMIN_NOTIFY_EMAIL` | Optional: Recipient email for admin contact form notifications |
+| `SMS_PROVIDER` | Optional: SMS provider (`twilio` or `webhook`) |
+| `TWILIO_ACCOUNT_SID` | Optional: Twilio Account SID (`AC...`) |
+| `TWILIO_AUTH_TOKEN` | Optional: Twilio Auth Token |
+| `TWILIO_FROM` | Optional: Twilio sender phone number |
+| `TWILIO_MESSAGING_SERVICE_SID` | Optional: Twilio Messaging Service SID (`MG...`) |
+| `SMS_WEBHOOK_URL` | Optional: Custom SMS webhook gateway URL |
+| `SMS_WEBHOOK_TOKEN` | Optional: Bearer token for custom SMS webhook |
+| `SMS_SENDER_ID` | Optional: Sender ID / name passed to SMS webhook |
 
 ## Scripts
 

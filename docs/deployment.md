@@ -100,6 +100,17 @@ Values for the first deploy:
 | `APP_BASE_URL` | Placeholder for now, real value in step 7 |
 | `CORS_ORIGIN` | Wherever a frontend would live, e.g. `http://localhost:3000` |
 | `FRONTEND_URL` | The deployed frontend origin, no trailing slash. Required in production: Stripe redirects the payer to `<FRONTEND_URL>/payment/success` |
+| `RESEND_API_KEY` | Optional: Resend API key for transactional emails (`re_...`) |
+| `EMAIL_FROM` | Optional: Sender address for emails, e.g. `RapidAid <no-reply@example.com>` |
+| `ADMIN_NOTIFY_EMAIL` | Optional: Recipient email for admin contact form notifications |
+| `SMS_PROVIDER` | Optional: SMS dispatch provider (`twilio` or `webhook`) |
+| `TWILIO_ACCOUNT_SID` | Optional: Twilio Account SID (`AC...`) |
+| `TWILIO_AUTH_TOKEN` | Optional: Twilio Auth Token |
+| `TWILIO_FROM` | Optional: Twilio sender phone number |
+| `TWILIO_MESSAGING_SERVICE_SID` | Optional: Twilio Messaging Service SID (`MG...`) |
+| `SMS_WEBHOOK_URL` | Optional: Custom SMS webhook gateway URL |
+| `SMS_WEBHOOK_TOKEN` | Optional: Bearer token for custom SMS webhook |
+| `SMS_SENDER_ID` | Optional: Sender ID / name for SMS webhook |
 
 Generate good secrets with `openssl rand -hex 32`.
 

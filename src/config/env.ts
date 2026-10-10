@@ -24,6 +24,54 @@ const envSchema = z.object({
 
   // Public base url of the web frontend, stripe sends the payer back here after checkout
   FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+
+  // Email configuration (Resend) - optional
+  RESEND_API_KEY: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  EMAIL_FROM: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  ADMIN_NOTIFY_EMAIL: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().email().optional(),
+  ),
+
+  // SMS configuration - optional
+  SMS_PROVIDER: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.enum(['twilio', 'webhook']).optional(),
+  ),
+  TWILIO_ACCOUNT_SID: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  TWILIO_AUTH_TOKEN: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  TWILIO_FROM: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  TWILIO_MESSAGING_SERVICE_SID: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  SMS_WEBHOOK_URL: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().url().optional(),
+  ),
+  SMS_WEBHOOK_TOKEN: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
+  SMS_SENDER_ID: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().optional(),
+  ),
 })
 
 const parsed = envSchema.safeParse(process.env)
