@@ -66,6 +66,7 @@ export const getMe = catchAsync(async (req: Request, res: Response) => {
       isVerified: true,
       notifySms: true,
       notifyEmail: true,
+      avatarUrl: true,
       createdAt: true,
     },
   })

@@ -81,6 +81,8 @@ model User {
   isVerified Boolean   @default(false)
   notifySms   Boolean   @default(false)
   notifyEmail Boolean   @default(true)
+  // Profile photo as a small data URL (client resizes to ~256px JPEG, <= 60 KB).
+  avatarUrl   String?   @db.Text
   deletedAt  DateTime?
 
   createdAt  DateTime  @default(now())

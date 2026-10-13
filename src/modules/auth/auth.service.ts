@@ -36,6 +36,7 @@ const PUBLIC_USER_SELECT = {
   isVerified: true,
   notifySms: true,
   notifyEmail: true,
+  avatarUrl: true,
   createdAt: true,
 } as const
 
@@ -50,6 +51,7 @@ export interface AuthResult {
     | 'isVerified'
     | 'notifySms'
     | 'notifyEmail'
+    | 'avatarUrl'
     | 'createdAt'
   >
   accessToken: string

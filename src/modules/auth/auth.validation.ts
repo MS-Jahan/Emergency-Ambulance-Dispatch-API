@@ -30,6 +30,16 @@ export const updateProfileSchema = z.object({
   phone: z.string().min(6).max(20).optional(),
   notifySms: z.boolean().optional(),
   notifyEmail: z.boolean().optional(),
+  // Small image as a data URL; null removes the photo.
+  avatarUrl: z
+    .string()
+    .max(60_000, 'Image is too large')
+    .regex(
+      /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/,
+      'Must be a JPEG, PNG or WebP data URL',
+    )
+    .nullable()
+    .optional(),
 })
 
 export const changePasswordSchema = z.object({
